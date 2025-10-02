@@ -64,6 +64,35 @@ namespace FlightManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateFlight(CreateFlightDTO flightDto)
         {
+            var aircraft = await _context.Aircraft.FindAsync(flightDto.AircraftId);
+            if (aircraft == null)
+            {
+                return BadRequest("Invalid aircraft ID.");
+            }
+
+            var departureAirport = await _context.Airports.FindAsync(flightDto.DepartureAirportId);
+            if (departureAirport == null)
+            {
+                return BadRequest("Invalid departure airport ID.");
+            }
+
+            var arrivalAirport = await _context.Airports.FindAsync(flightDto.ArrivalAirportId);
+            if (arrivalAirport == null)
+            {
+                return BadRequest("Invalid arrival airport ID.");
+            }
+
+            var crewMembers = await _context.CrewMembers
+                .Where(c => flightDto.CrewMemberIds.Contains(c.Id))
+                .ToListAsync();
+
+            if (crewMembers.Count != flightDto.CrewMemberIds.Count)
+            {
+                return BadRequest("One or more crew member IDs are invalid.");
+            }
+
+            //!!!!role validation can be added here!!!!
+
             var flight = new Entities.Flight
             {
                 FlightNumber = flightDto.FlightNumber,

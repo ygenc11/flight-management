@@ -12,11 +12,17 @@ namespace FlightManagement.DTO
         public DateTime DepartureTime { get; set; }
         public DateTime ArrivalTime { get; set; }
         public int AircraftId { get; set; }
+        public AircraftDTO Aircraft { get; set; } = new();
 
         public int DepartureAirportId { get; set; }
+        public AirportDTO DepartureAirport { get; set; } = new();
 
         public int ArrivalAirportId { get; set; }
+        public AirportDTO ArrivalAirport { get; set; } = new();
 
+        public List<CrewDTO> CrewMembers { get; set; } = new();
 
     }
+
+
 }

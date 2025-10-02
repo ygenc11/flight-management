@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlightManagement.Migrations
 {
     [DbContext(typeof(FlightManagementContext))]
-    [Migration("20250917223133_Initial")]
+    [Migration("20251002155745_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -47,6 +47,9 @@ namespace FlightManagement.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Model")
                         .IsRequired()
@@ -83,13 +86,19 @@ namespace FlightManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("IataCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("IcaCode")
+                    b.Property<string>("CountryCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IataCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("IcaoCode")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -98,6 +107,9 @@ namespace FlightManagement.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IataCode")
+                        .IsUnique();
+
+                    b.HasIndex("IcaoCode")
                         .IsUnique();
 
                     b.ToTable("Airports");
@@ -114,6 +126,9 @@ namespace FlightManagement.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -158,6 +173,9 @@ namespace FlightManagement.Migrations
                     b.Property<string>("FlightNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

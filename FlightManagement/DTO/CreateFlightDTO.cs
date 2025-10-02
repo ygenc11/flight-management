@@ -7,7 +7,6 @@ namespace FlightManagement.DTO
 {
     public class CreateFlightDTO
     {
-        public int Id { get; set; }
         public string FlightNumber { get; set; } = string.Empty;
         public DateTime DepartureTime { get; set; }
         public DateTime ArrivalTime { get; set; }
@@ -16,5 +15,7 @@ namespace FlightManagement.DTO
         public int DepartureAirportId { get; set; }
 
         public int ArrivalAirportId { get; set; }
+
+        public List<int> CrewMemberIds { get; set; } = new();
     }
 }

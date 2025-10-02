@@ -28,6 +28,7 @@ namespace FlightManagement.Controllers
             var crewList = await _context.CrewMembers.ToListAsync();
             var crewDtoList = crewList.Select(c => new CrewDTO
             {
+                Id = c.Id,
                 FirstName = c.FirstName,
                 LastName = c.LastName,
                 Role = c.Role,
@@ -47,6 +48,7 @@ namespace FlightManagement.Controllers
             }
             var crewDto = new CrewDTO
             {
+                Id = crewMember.Id,
                 FirstName = crewMember.FirstName,
                 LastName = crewMember.LastName,
                 Role = crewMember.Role,

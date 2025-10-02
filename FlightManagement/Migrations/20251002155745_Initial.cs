@@ -19,7 +19,8 @@ namespace FlightManagement.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Model = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TailNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SeatsCapacity = table.Column<int>(type: "int", nullable: false)
+                    SeatsCapacity = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -33,8 +34,9 @@ namespace FlightManagement.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IataCode = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    IcaCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IataCode = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
+                    IcaoCode = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    CountryCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     City = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
@@ -52,7 +54,8 @@ namespace FlightManagement.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LicenseNumber = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    LicenseNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -70,7 +73,8 @@ namespace FlightManagement.Migrations
                     ArrivalTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     AircraftId = table.Column<int>(type: "int", nullable: false),
                     DepartureAirportId = table.Column<int>(type: "int", nullable: false),
-                    ArrivalAirportId = table.Column<int>(type: "int", nullable: false)
+                    ArrivalAirportId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -129,6 +133,12 @@ namespace FlightManagement.Migrations
                 name: "IX_Airports_IataCode",
                 table: "Airports",
                 column: "IataCode",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Airports_IcaoCode",
+                table: "Airports",
+                column: "IcaoCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(
