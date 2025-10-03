@@ -25,7 +25,13 @@ namespace FlightManagement.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FlightDTO>>> GetAllFlights()
         {
-            var flightList = await _context.Flights.ToListAsync();
+            var flightList = await _context.Flights
+                .Include(f => f.CrewMembers)
+                .Include(f => f.Aircraft)
+                .Include(f => f.DepartureAirport)
+                .Include(f => f.ArrivalAirport)
+                .ToListAsync();
+
             var flightDtoList = flightList.Select(f => new FlightDTO
             {
                 Id = f.Id,
@@ -34,7 +40,40 @@ namespace FlightManagement.Controllers
                 DepartureTime = f.DepartureTime,
                 ArrivalTime = f.ArrivalTime,
                 DepartureAirportId = f.DepartureAirportId,
-                ArrivalAirportId = f.ArrivalAirportId
+                ArrivalAirportId = f.ArrivalAirportId,
+                Aircraft = f.Aircraft != null ? new AircraftDTO
+                {
+                    Id = f.Aircraft.Id,
+                    Model = f.Aircraft.Model,
+                    TailNumber = f.Aircraft.TailNumber,
+                    SeatsCapacity = f.Aircraft.SeatsCapacity
+                } : new AircraftDTO(),
+                DepartureAirport = f.DepartureAirport != null ? new AirportDTO
+                {
+                    Id = f.DepartureAirport.Id,
+                    Name = f.DepartureAirport.Name,
+                    IataCode = f.DepartureAirport.IataCode,
+                    IcaoCode = f.DepartureAirport.IcaoCode,
+                    City = f.DepartureAirport.City,
+                    Country = f.DepartureAirport.Country
+                } : new AirportDTO(),
+                ArrivalAirport = f.ArrivalAirport != null ? new AirportDTO
+                {
+                    Id = f.ArrivalAirport.Id,
+                    Name = f.ArrivalAirport.Name,
+                    IataCode = f.ArrivalAirport.IataCode,
+                    IcaoCode = f.ArrivalAirport.IcaoCode,
+                    City = f.ArrivalAirport.City,
+                    Country = f.ArrivalAirport.Country
+                } : new AirportDTO(),
+                CrewMembers = f.CrewMembers.Select(c => new CrewDTO
+                {
+                    Id = c.Id,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    Role = c.Role,
+                    LicenseNumber = c.LicenseNumber
+                }).ToList()
             }).ToList();
             return Ok(flightDtoList);
         }
@@ -42,11 +81,18 @@ namespace FlightManagement.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<FlightDTO>> GetFlightById(int id)
         {
-            var flight = await _context.Flights.FindAsync(id);
+            var flight = await _context.Flights
+                .Include(f => f.CrewMembers)
+                .Include(f => f.Aircraft)
+                .Include(f => f.DepartureAirport)
+                .Include(f => f.ArrivalAirport)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
             if (flight == null)
             {
                 return NotFound();
             }
+
             var flightDto = new FlightDTO
             {
                 Id = flight.Id,
@@ -55,7 +101,40 @@ namespace FlightManagement.Controllers
                 DepartureTime = flight.DepartureTime,
                 ArrivalTime = flight.ArrivalTime,
                 DepartureAirportId = flight.DepartureAirportId,
-                ArrivalAirportId = flight.ArrivalAirportId
+                ArrivalAirportId = flight.ArrivalAirportId,
+                Aircraft = flight.Aircraft != null ? new AircraftDTO
+                {
+                    Id = flight.Aircraft.Id,
+                    Model = flight.Aircraft.Model,
+                    TailNumber = flight.Aircraft.TailNumber,
+                    SeatsCapacity = flight.Aircraft.SeatsCapacity
+                } : new AircraftDTO(),
+                DepartureAirport = flight.DepartureAirport != null ? new AirportDTO
+                {
+                    Id = flight.DepartureAirport.Id,
+                    Name = flight.DepartureAirport.Name,
+                    IataCode = flight.DepartureAirport.IataCode,
+                    IcaoCode = flight.DepartureAirport.IcaoCode,
+                    City = flight.DepartureAirport.City,
+                    Country = flight.DepartureAirport.Country
+                } : new AirportDTO(),
+                ArrivalAirport = flight.ArrivalAirport != null ? new AirportDTO
+                {
+                    Id = flight.ArrivalAirport.Id,
+                    Name = flight.ArrivalAirport.Name,
+                    IataCode = flight.ArrivalAirport.IataCode,
+                    IcaoCode = flight.ArrivalAirport.IcaoCode,
+                    City = flight.ArrivalAirport.City,
+                    Country = flight.ArrivalAirport.Country
+                } : new AirportDTO(),
+                CrewMembers = flight.CrewMembers.Select(c => new CrewDTO
+                {
+                    Id = c.Id,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    Role = c.Role,
+                    LicenseNumber = c.LicenseNumber
+                }).ToList()
             };
             return Ok(flightDto);
         }
@@ -100,28 +179,94 @@ namespace FlightManagement.Controllers
                 ArrivalTime = flightDto.ArrivalTime,
                 AircraftId = flightDto.AircraftId,
                 DepartureAirportId = flightDto.DepartureAirportId,
-                ArrivalAirportId = flightDto.ArrivalAirportId
+                ArrivalAirportId = flightDto.ArrivalAirportId,
+                CrewMembers = crewMembers
             };
+
             _context.Flights.Add(flight);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetFlightById), new { id = flight.Id }, flight);
+
+            // ✅ Return DTO instead of entity to avoid circular reference
+            var responseDto = new FlightDTO
+            {
+                Id = flight.Id,
+                FlightNumber = flight.FlightNumber,
+                DepartureTime = flight.DepartureTime,
+                ArrivalTime = flight.ArrivalTime,
+                AircraftId = flight.AircraftId,
+                DepartureAirportId = flight.DepartureAirportId,
+                ArrivalAirportId = flight.ArrivalAirportId,
+                Aircraft = new AircraftDTO
+                {
+                    Id = aircraft.Id,
+                    Model = aircraft.Model,
+                    TailNumber = aircraft.TailNumber,
+                    SeatsCapacity = aircraft.SeatsCapacity
+                },
+                DepartureAirport = new AirportDTO
+                {
+                    Id = departureAirport.Id,
+                    Name = departureAirport.Name,
+                    IataCode = departureAirport.IataCode,
+                    IcaoCode = departureAirport.IcaoCode,
+                    City = departureAirport.City,
+                    Country = departureAirport.Country
+                },
+                ArrivalAirport = new AirportDTO
+                {
+                    Id = arrivalAirport.Id,
+                    Name = arrivalAirport.Name,
+                    IataCode = arrivalAirport.IataCode,
+                    IcaoCode = arrivalAirport.IcaoCode,
+                    City = arrivalAirport.City,
+                    Country = arrivalAirport.Country
+                },
+                CrewMembers = crewMembers.Select(c => new CrewDTO
+                {
+                    Id = c.Id,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    Role = c.Role,
+                    LicenseNumber = c.LicenseNumber
+                }).ToList()
+            };
+
+            return CreatedAtAction(nameof(GetFlightById), new { id = flight.Id }, responseDto);
         }
 
         // PUT: api/flight/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFlight(int id, CreateFlightDTO flightDto)
         {
-            var flight = await _context.Flights.FindAsync(id);
+            var flight = await _context.Flights
+                .Include(f => f.CrewMembers)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
             if (flight == null)
             {
                 return NotFound();
             }
+
+            // Validate crew members
+            var crewMembers = await _context.CrewMembers
+                .Where(c => flightDto.CrewMemberIds.Contains(c.Id))
+                .ToListAsync();
+
+            if (crewMembers.Count != flightDto.CrewMemberIds.Count)
+            {
+                return BadRequest("One or more crew member IDs are invalid.");
+            }
+
             flight.FlightNumber = flightDto.FlightNumber;
             flight.DepartureTime = flightDto.DepartureTime;
             flight.ArrivalTime = flightDto.ArrivalTime;
             flight.AircraftId = flightDto.AircraftId;
             flight.DepartureAirportId = flightDto.DepartureAirportId;
             flight.ArrivalAirportId = flightDto.ArrivalAirportId;
+
+            // Update crew members
+            flight.CrewMembers.Clear();
+            flight.CrewMembers = crewMembers;
 
             _context.Entry(flight).State = EntityState.Modified;
             try
