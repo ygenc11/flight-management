@@ -5,14 +5,7 @@ using System.Threading.Tasks;
 
 namespace FlightManagement.Entities
 {
-    public enum FlightStatus
-    {
-        Planned,
-        Delayed,
-        Cancelled,
-        Departed,
-        Arrived
-    }
+
     public class Flight
     {
         public int Id { get; set; }
@@ -29,7 +22,7 @@ namespace FlightManagement.Entities
         // Navigation property for the crew members
 
         public List<Crew> CrewMembers { get; set; } = new List<Crew>();
-        public FlightStatus Status { get; set; } = FlightStatus.Planned;
+        public string Status { get; set; } = "Planned";
     }
 
 }

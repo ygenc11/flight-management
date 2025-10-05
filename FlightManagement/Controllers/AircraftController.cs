@@ -23,7 +23,6 @@ namespace FlightManagement.Controllers
 
         // GET: api/aircraft
         [HttpGet]
-        [HttpGet]
         public async Task<ActionResult<IEnumerable<AircraftDTO>>> GetAllAircraft()
         {
             var aircraftList = await _context.Aircraft.ToListAsync();
@@ -66,7 +65,8 @@ namespace FlightManagement.Controllers
                 Model = aircraftDto.Model,
                 TailNumber = aircraftDto.TailNumber,
                 SeatsCapacity = aircraftDto.SeatsCapacity,
-                IsActive = true // Yeni eklenen uçak aktif olarak işaretlenir
+                IsActive = true // entityde isactive otomatik true olarak ayarlanıyor yani buraya yazmasak da olur
+
             };
             _context.Aircraft.Add(aircraft);
             await _context.SaveChangesAsync();
