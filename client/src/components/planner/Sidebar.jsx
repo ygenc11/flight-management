@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  MapPin,
-  Plane,
-  Users,
-  Calendar,
-  User,
-  ChevronRight,
-} from "lucide-react";
+import { MapPin, Plane, Users, Calendar, ChevronRight } from "lucide-react";
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const tabs = [
@@ -52,18 +45,6 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           );
         })}
       </nav>
-
-      <div className="p-6 border-t border-slate-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-slate-300" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <p className="text-xs text-slate-400">System Administrator</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

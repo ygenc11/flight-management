@@ -6,6 +6,7 @@ using FlightManagement.Data;
 using FlightManagement.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FlightManagement.Controllers
 {
@@ -13,11 +14,13 @@ namespace FlightManagement.Controllers
     [Route("api/[controller]")]
     public class AirportController : ControllerBase
     {
-        //dependency injection of the DbContext
+        // dependency injection of the DbContext
         private readonly FlightManagementContext _context;
-        public AirportController(FlightManagementContext context)
+        private readonly ILogger<AirportController> _logger;
+        public AirportController(FlightManagementContext context, ILogger<AirportController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/airport
@@ -34,6 +37,7 @@ namespace FlightManagement.Controllers
                 IataCode = a.IataCode,
                 IcaoCode = a.IcaoCode
             }).ToList();
+            _logger.LogDebug("All airports listed. Count: {Count}", dtoList.Count);
             return Ok(dtoList);
         }
 
@@ -44,6 +48,7 @@ namespace FlightManagement.Controllers
             var airport = await _context.Airports.FindAsync(id);
             if (airport == null)
             {
+                _logger.LogWarning("Airport not found: {Id}", id);
                 return NotFound();
             }
             var dto = new AirportDTO
@@ -55,6 +60,7 @@ namespace FlightManagement.Controllers
                 IataCode = airport.IataCode,
                 IcaoCode = airport.IcaoCode
             };
+            _logger.LogInformation("Airport fetched: {Id} {Name}", dto.Id, dto.Name);
             return Ok(dto);
         }
 
@@ -62,6 +68,13 @@ namespace FlightManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAirport(CreateAirportDTO airportDto)
         {
+            // IataCode benzersiz mi kontrolü
+            var exists = await _context.Airports.AnyAsync(a => a.IataCode == airportDto.IataCode);
+            if (exists)
+            {
+                _logger.LogWarning("Airport create failed: IataCode already exists ({IataCode})", airportDto.IataCode);
+                return BadRequest(new { error = "Bu IataCode zaten mevcut!" });
+            }
             var airport = new Entities.Airport
             {
                 Name = airportDto.Name,
@@ -72,6 +85,7 @@ namespace FlightManagement.Controllers
             };
             _context.Airports.Add(airport);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Airport created: {Id} {Name}", airport.Id, airport.Name);
             return CreatedAtAction(nameof(GetAirportById), new { id = airport.Id }, airport);
         }
 
@@ -82,6 +96,7 @@ namespace FlightManagement.Controllers
             var airport = await _context.Airports.FindAsync(id);
             if (airport == null)
             {
+                _logger.LogError("Airport not found for update: {Id}", id);
                 return NotFound();
             }
             airport.Name = airportDto.Name;
@@ -94,11 +109,13 @@ namespace FlightManagement.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("Airport updated: {Id} {Name}", airport.Id, airport.Name);
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!_context.Airports.Any(e => e.Id == id))
                 {
+                    _logger.LogError("Airport not found after concurrency exception: {Id}", id);
                     return NotFound();
                 }
                 else
@@ -116,10 +133,12 @@ namespace FlightManagement.Controllers
             var airport = await _context.Airports.FindAsync(id);
             if (airport == null)
             {
+                _logger.LogError("Airport not found for delete: {Id}", id);
                 return NotFound();
             }
             _context.Airports.Remove(airport);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Airport deleted: {Id} {Name}", airport.Id, airport.Name);
             return NoContent();
         }
 

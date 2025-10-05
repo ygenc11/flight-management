@@ -6,6 +6,7 @@ using FlightManagement.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FlightManagement.DTO;
+using Microsoft.Extensions.Logging;
 
 namespace FlightManagement.Controllers
 {
@@ -16,9 +17,11 @@ namespace FlightManagement.Controllers
 
         // dependency injection of the DbContext
         private readonly FlightManagementContext _context;
-        public CrewController(FlightManagementContext context)
+        private readonly ILogger<CrewController> _logger;
+        public CrewController(FlightManagementContext context, ILogger<CrewController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/crew
@@ -34,6 +37,7 @@ namespace FlightManagement.Controllers
                 Role = c.Role,
                 LicenseNumber = c.LicenseNumber
             }).ToList();
+            _logger.LogDebug("All crew members listed. Count: {Count}", crewDtoList.Count);
             return Ok(crewDtoList);
         }
 
@@ -44,6 +48,7 @@ namespace FlightManagement.Controllers
             var crewMember = await _context.CrewMembers.FindAsync(id);
             if (crewMember == null)
             {
+                _logger.LogWarning("Crew member not found: {Id}", id);
                 return NotFound();
             }
             var crewDto = new CrewDTO
@@ -54,6 +59,7 @@ namespace FlightManagement.Controllers
                 Role = crewMember.Role,
                 LicenseNumber = crewMember.LicenseNumber
             };
+            _logger.LogInformation("Crew member fetched: {Id} {FirstName} {LastName}", crewDto.Id, crewDto.FirstName, crewDto.LastName);
             return Ok(crewDto);
         }
 
@@ -61,15 +67,22 @@ namespace FlightManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCrewMember(CreateCrewDTO crewMemberDto)
         {
+            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
+            if (!validRoles.Contains(crewMemberDto.Role.ToLowerInvariant()))
+            {
+                _logger.LogWarning("Invalid crew member role: {Role}", crewMemberDto.Role);
+                return BadRequest("Invalid crew member role. Allowed roles: pilot, copilot, flightattendant.");
+            }
             var crewMember = new Entities.Crew
             {
                 FirstName = crewMemberDto.FirstName,
                 LastName = crewMemberDto.LastName,
-                Role = crewMemberDto.Role,
+                Role = crewMemberDto.Role.ToLowerInvariant(),
                 LicenseNumber = crewMemberDto.LicenseNumber
             };
             _context.CrewMembers.Add(crewMember);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Crew member created: {FirstName} {LastName} ({Role})", crewMember.FirstName, crewMember.LastName, crewMember.Role);
             return CreatedAtAction(nameof(GetCrewMemberById), new { id = crewMember.Id }, crewMember);
         }
 
@@ -77,9 +90,16 @@ namespace FlightManagement.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCrewMember(int id, CreateCrewDTO crewMemberDto)
         {
+            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
+            if (!validRoles.Contains(crewMemberDto.Role.ToLower()))
+            {
+                _logger.LogWarning("Invalid crew member role for update: {Role}", crewMemberDto.Role);
+                return BadRequest("Invalid crew member role. Allowed roles: pilot, copilot, flightattendant.");
+            }
             var crewMember = await _context.CrewMembers.FindAsync(id);
             if (crewMember == null)
             {
+                _logger.LogError("Crew member not found for update: {Id}", id);
                 return NotFound();
             }
             crewMember.FirstName = crewMemberDto.FirstName;
@@ -91,11 +111,13 @@ namespace FlightManagement.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("Crew member updated: {Id} {FirstName} {LastName}", crewMember.Id, crewMember.FirstName, crewMember.LastName);
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!CrewMemberExists(id))
                 {
+                    _logger.LogError("Crew member not found after concurrency exception: {Id}", id);
                     return NotFound();
                 }
                 else
@@ -118,10 +140,12 @@ namespace FlightManagement.Controllers
             var crewMember = await _context.CrewMembers.FindAsync(id);
             if (crewMember == null)
             {
+                _logger.LogError("Crew member not found for delete: {Id}", id);
                 return NotFound();
             }
             _context.CrewMembers.Remove(crewMember);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Crew member deleted: {Id} {FirstName} {LastName}", crewMember.Id, crewMember.FirstName, crewMember.LastName);
             return NoContent();
         }
     }

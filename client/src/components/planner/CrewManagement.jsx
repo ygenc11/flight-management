@@ -61,11 +61,22 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
 
   const badge = (role) => {
     const r = role.toLowerCase();
-    if (r.includes("captain")) return "bg-purple-100 text-purple-800";
-    if (r.includes("first")) return "bg-blue-100 text-blue-800";
-    if (r.includes("attendant")) return "bg-green-100 text-green-800";
-    return "bg-gray-100 text-gray-800";
+    if (r.includes("captain")) return "bg-gray-100 text-gray-700";
+    if (r.includes("first")) return "bg-gray-100 text-gray-700";
+    if (r.includes("attendant")) return "bg-gray-100 text-gray-700";
+    return "bg-gray-100 text-gray-700";
   };
+
+  // Group crew by role
+  const pilots = crew.filter(
+    (c) =>
+      c.role.toLowerCase().includes("pilot") &&
+      !c.role.toLowerCase().includes("co")
+  );
+  const coPilots = crew.filter((c) => c.role.toLowerCase().includes("copilot"));
+  const attendants = crew.filter((c) =>
+    c.role.toLowerCase().includes("attendant")
+  );
 
   return (
     <div className="p-8">
@@ -104,38 +115,143 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y">
-            {crew.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 flex items-center">
-                  <User className="w-5 h-5 text-gray-400 mr-3" />
-                  {c.firstName} {c.lastName}
-                </td>
-                <td className={`px-6 py-4`}>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
-                      c.role
-                    )}`}
+            {/* Pilots Section */}
+            {pilots.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="4"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
-                    {c.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4">{c.licenseNumber}</td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => openEdit(c)}
-                    className="text-blue-600 mr-3"
+                    Pilots ({pilots.length})
+                  </td>
+                </tr>
+                {pilots.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 flex items-center">
+                      <User className="w-5 h-5 text-gray-400 mr-3" />
+                      {c.firstName} {c.lastName}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
+                          c.role
+                        )}`}
+                      >
+                        {c.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">{c.licenseNumber}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => openEdit(c)}
+                        className="text-blue-600 mr-3"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
+
+            {/* Co-Pilots Section */}
+            {coPilots.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="4"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(c.id)}
-                    className="text-red-600"
+                    Co-Pilots ({coPilots.length})
+                  </td>
+                </tr>
+                {coPilots.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 flex items-center">
+                      <User className="w-5 h-5 text-gray-400 mr-3" />
+                      {c.firstName} {c.lastName}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
+                          c.role
+                        )}`}
+                      >
+                        {c.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">{c.licenseNumber}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => openEdit(c)}
+                        className="text-blue-600 mr-3"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
+
+            {/* Flight Attendants Section */}
+            {attendants.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="4"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    Flight Attendants ({attendants.length})
+                  </td>
+                </tr>
+                {attendants.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 flex items-center">
+                      <User className="w-5 h-5 text-gray-400 mr-3" />
+                      {c.firstName} {c.lastName}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
+                          c.role
+                        )}`}
+                      >
+                        {c.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">{c.licenseNumber}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => openEdit(c)}
+                        className="text-blue-600 mr-3"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
           </tbody>
         </table>
       </div>

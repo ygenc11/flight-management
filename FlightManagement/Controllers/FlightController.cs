@@ -17,9 +17,11 @@ namespace FlightManagement.Controllers
     {
         // dependency injection of the DbContext
         private readonly FlightManagementContext _context;
-        public FlightController(FlightManagementContext context)
+        private readonly ILogger<FlightController> _logger;
+        public FlightController(FlightManagementContext context, ILogger<FlightController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/flight
@@ -42,6 +44,9 @@ namespace FlightManagement.Controllers
                 ArrivalTime = f.ArrivalTime,
                 DepartureAirportId = f.DepartureAirportId,
                 ArrivalAirportId = f.ArrivalAirportId,
+                Status = f.Status,
+                StatusDescription = f.StatusDescription,
+
                 Aircraft = f.Aircraft != null ? new AircraftDTO
                 {
                     Id = f.Aircraft.Id,
@@ -76,6 +81,7 @@ namespace FlightManagement.Controllers
                     LicenseNumber = c.LicenseNumber
                 }).ToList()
             }).ToList();
+            _logger.LogDebug("All flights listed. Count: {Count}", flightDtoList.Count);
             return Ok(flightDtoList);
         }
         // GET: api/flight/{id}
@@ -91,6 +97,7 @@ namespace FlightManagement.Controllers
 
             if (flight == null)
             {
+                _logger.LogWarning("Flight not found: {Id}", id);
                 return NotFound();
             }
 
@@ -103,6 +110,8 @@ namespace FlightManagement.Controllers
                 ArrivalTime = flight.ArrivalTime,
                 DepartureAirportId = flight.DepartureAirportId,
                 ArrivalAirportId = flight.ArrivalAirportId,
+                Status = flight.Status,
+                StatusDescription = flight.StatusDescription,
                 Aircraft = flight.Aircraft != null ? new AircraftDTO
                 {
                     Id = flight.Aircraft.Id,
@@ -137,6 +146,7 @@ namespace FlightManagement.Controllers
                     LicenseNumber = c.LicenseNumber
                 }).ToList()
             };
+            _logger.LogInformation("Flight fetched: {Id} {FlightNumber}", flightDto.Id, flightDto.FlightNumber);
             return Ok(flightDto);
         }
 
@@ -147,18 +157,21 @@ namespace FlightManagement.Controllers
             var aircraft = await _context.Aircraft.FindAsync(flightDto.AircraftId);
             if (aircraft == null)
             {
+                _logger.LogWarning("Invalid aircraft ID: {AircraftId}", flightDto.AircraftId);
                 return BadRequest("Invalid aircraft ID.");
             }
 
             var departureAirport = await _context.Airports.FindAsync(flightDto.DepartureAirportId);
             if (departureAirport == null)
             {
+                _logger.LogWarning("Invalid departure airport ID: {DepartureAirportId}", flightDto.DepartureAirportId);
                 return BadRequest("Invalid departure airport ID.");
             }
 
             var arrivalAirport = await _context.Airports.FindAsync(flightDto.ArrivalAirportId);
             if (arrivalAirport == null)
             {
+                _logger.LogWarning("Invalid arrival airport ID: {ArrivalAirportId}", flightDto.ArrivalAirportId);
                 return BadRequest("Invalid arrival airport ID.");
             }
 
@@ -168,24 +181,26 @@ namespace FlightManagement.Controllers
 
             if (crewMembers.Count != flightDto.CrewMemberIds.Count)
             {
+                _logger.LogWarning("Invalid crew member IDs for flight creation.");
                 return BadRequest("One or more crew member IDs are invalid.");
             }
 
-            //!!!!role validation can be added here!!!!
-            var validRoles = new[] { "Pilot", "CoPilot", "FlightAttendant" };
-            if (!crewMembers.All(c => validRoles.Contains(c.Role)))
+            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
+            if (!crewMembers.All(c => validRoles.Contains(c.Role.ToLowerInvariant())))
             {
+                _logger.LogWarning("Invalid crew member role for flight creation.");
                 return BadRequest("Invalid crew member role.");
             }
-            if (!crewMembers.Any(c => c.Role == "Pilot"))
+            if (!crewMembers.Any(c => c.Role == "pilot"))
             {
+                _logger.LogWarning("No pilot assigned for flight creation.");
                 return BadRequest("At least one Pilot is required for each flight.");
             }
-            if (!crewMembers.Any(c => c.Role == "CoPilot"))
+            if (!crewMembers.Any(c => c.Role == "copilot"))
             {
+                _logger.LogWarning("No copilot assigned for flight creation.");
                 return BadRequest("At least one CoPilot is required for each flight.");
             }
-
 
             var flight = new Entities.Flight
             {
@@ -201,7 +216,6 @@ namespace FlightManagement.Controllers
             _context.Flights.Add(flight);
             await _context.SaveChangesAsync();
 
-            // Return DTO instead of entity to avoid circular reference
             var responseDto = new FlightDTO
             {
                 Id = flight.Id,
@@ -246,6 +260,7 @@ namespace FlightManagement.Controllers
                 }).ToList()
             };
 
+            _logger.LogInformation("Flight created: {Id} {FlightNumber}", flight.Id, flight.FlightNumber);
             return CreatedAtAction(nameof(GetFlightById), new { id = flight.Id }, responseDto);
         }
 
@@ -259,31 +274,34 @@ namespace FlightManagement.Controllers
 
             if (flight == null)
             {
+                _logger.LogError("Flight not found for update: {Id}", id);
                 return NotFound();
             }
 
-            // Validate crew members
             var crewMembers = await _context.CrewMembers
                 .Where(c => flightDto.CrewMemberIds.Contains(c.Id))
                 .ToListAsync();
 
             if (crewMembers.Count != flightDto.CrewMemberIds.Count)
             {
+                _logger.LogWarning("Invalid crew member IDs for flight update.");
                 return BadRequest("One or more crew member IDs are invalid.");
             }
 
-            // Role validation can be added here
-            var validRoles = new[] { "Pilot", "CoPilot", "FlightAttendant" };
-            if (!crewMembers.All(c => validRoles.Contains(c.Role)))
+            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
+            if (!crewMembers.All(c => validRoles.Contains(c.Role.ToLowerInvariant())))
             {
+                _logger.LogWarning("Invalid crew member role for flight update.");
                 return BadRequest("Invalid crew member role.");
             }
-            if (!crewMembers.Any(c => c.Role == "Pilot"))
+            if (!crewMembers.Any(c => c.Role == "pilot"))
             {
+                _logger.LogWarning("No pilot assigned for flight update.");
                 return BadRequest("At least one Pilot is required for each flight.");
             }
-            if (!crewMembers.Any(c => c.Role == "CoPilot"))
+            if (!crewMembers.Any(c => c.Role == "copilot"))
             {
+                _logger.LogWarning("No copilot assigned for flight update.");
                 return BadRequest("At least one CoPilot is required for each flight.");
             }
 
@@ -302,11 +320,13 @@ namespace FlightManagement.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("Flight updated: {Id} {FlightNumber}", flight.Id, flight.FlightNumber);
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!FlightExists(id))
                 {
+                    _logger.LogError("Flight not found after concurrency exception: {Id}", id);
                     return NotFound();
                 }
                 else
@@ -328,10 +348,12 @@ namespace FlightManagement.Controllers
             var flight = await _context.Flights.FindAsync(id);
             if (flight == null)
             {
+                _logger.LogError("Flight not found for delete: {Id}", id);
                 return NotFound();
             }
             _context.Flights.Remove(flight);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Flight deleted: {Id} {FlightNumber}", flight.Id, flight.FlightNumber);
             return NoContent();
         }
         // POST: api/flight/{id}/assign-crew
@@ -356,18 +378,18 @@ namespace FlightManagement.Controllers
                 return BadRequest("One or more crew member IDs are invalid.");
             }
 
-            var validRoles = new[] { "Pilot", "CoPilot", "FlightAttendant" };
+            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
             if (!crewMembers.All(c => validRoles.Contains(c.Role)))
             {
                 return BadRequest("Invalid crew member role.");
             }
-            if (!crewMembers.Any(c => c.Role == "Pilot"))
+            if (!crewMembers.Any(c => c.Role == "pilot"))
             {
-                return BadRequest("At least one Pilot is required for each flight.");
+                return BadRequest("At least one pilot is required for each flight.");
             }
-            if (!crewMembers.Any(c => c.Role == "CoPilot"))
+            if (!crewMembers.Any(c => c.Role == "copilot"))
             {
-                return BadRequest("At least one CoPilot is required for each flight.");
+                return BadRequest("At least one copilot is required for each flight.");
             }
 
             // Önceki ekip üyelerini temizle ve yenilerini ata
@@ -380,7 +402,7 @@ namespace FlightManagement.Controllers
 
         // PATCH: api/flight/{id}/status
         [HttpPatch("{id}/status")]
-        public async Task<IActionResult> UpdateFlightStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdateFlightStatus(int id, [FromBody] string status, string statusDescription = "")
         {
             var validStatuses = new[] { "Planned", "Delayed", "Cancelled", "Departed", "Arrived" };
             if (!validStatuses.Contains(status))
@@ -392,6 +414,7 @@ namespace FlightManagement.Controllers
                 return NotFound();
 
             flight.Status = status;
+            flight.StatusDescription = statusDescription;
             await _context.SaveChangesAsync();
             return NoContent();
         }

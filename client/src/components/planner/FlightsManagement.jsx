@@ -107,6 +107,68 @@ const FlightsManagement = ({
     return air ? `${air.tailNumber} - ${air.model}` : "-";
   };
 
+  // Group flights by status
+  const planned = flights.filter(
+    (f) => !f.status || f.status.toLowerCase() === "planned"
+  );
+  const delayed = flights.filter(
+    (f) => f.status && f.status.toLowerCase() === "delayed"
+  );
+  const departed = flights.filter(
+    (f) => f.status && f.status.toLowerCase() === "departed"
+  );
+  const arrived = flights.filter(
+    (f) => f.status && f.status.toLowerCase() === "arrived"
+  );
+  const cancelled = flights.filter(
+    (f) => f.status && f.status.toLowerCase() === "cancelled"
+  );
+
+  const renderFlightRow = (f) => (
+    <tr key={f.id} className="hover:bg-gray-50">
+      <td className="px-6 py-4 font-medium">{f.flightNumber}</td>
+      <td className="px-6 py-4 text-sm">
+        <div className="font-medium">{lookupAirport(f.departureAirportId)}</div>
+        <div className="text-gray-500">
+          <Clock className="inline w-3 h-3 mr-1" />
+          {new Date(f.departureTime).toLocaleString()}
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm">
+        <div className="font-medium">{lookupAirport(f.arrivalAirportId)}</div>
+        <div className="text-gray-500">
+          <Clock className="inline w-3 h-3 mr-1" />
+          {new Date(f.arrivalTime).toLocaleString()}
+        </div>
+      </td>
+      <td className="px-6 py-4">{lookupAircraft(f.aircraftId)}</td>
+      <td className="px-6 py-4 text-sm">
+        {(f.crewMembers || []).length > 0 ? (
+          <div className="space-y-1">
+            {f.crewMembers.map((c) => (
+              <div key={c.id} className="text-gray-700">
+                <span className="font-medium">
+                  {c.firstName} {c.lastName}
+                </span>
+                <span className="text-xs text-gray-500 ml-1">({c.role})</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="text-gray-400 italic">No crew assigned</span>
+        )}
+      </td>
+      <td className="px-6 py-4">
+        <button onClick={() => openEdit(f)} className="text-blue-600 mr-3">
+          <Edit2 className="w-4 h-4" />
+        </button>
+        <button onClick={() => handleDelete(f.id)} className="text-red-600">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </td>
+    </tr>
+  );
+
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -150,64 +212,80 @@ const FlightsManagement = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y">
-            {flights.map((f) => (
-              <tr key={f.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium">{f.flightNumber}</td>
-                <td className="px-6 py-4 text-sm">
-                  <div className="font-medium">
-                    {lookupAirport(f.departureAirportId)}
-                  </div>
-                  <div className="text-gray-500">
-                    <Clock className="inline w-3 h-3 mr-1" />
-                    {new Date(f.departureTime).toLocaleString()}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm">
-                  <div className="font-medium">
-                    {lookupAirport(f.arrivalAirportId)}
-                  </div>
-                  <div className="text-gray-500">
-                    <Clock className="inline w-3 h-3 mr-1" />
-                    {new Date(f.arrivalTime).toLocaleString()}
-                  </div>
-                </td>
-                <td className="px-6 py-4">{lookupAircraft(f.aircraftId)}</td>
-                <td className="px-6 py-4 text-sm">
-                  {(f.crewMembers || []).length > 0 ? (
-                    <div className="space-y-1">
-                      {f.crewMembers.map((c) => (
-                        <div key={c.id} className="text-gray-700">
-                          <span className="font-medium">
-                            {c.firstName} {c.lastName}
-                          </span>
-                          <span className="text-xs text-gray-500 ml-1">
-                            ({c.role})
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400 italic">
-                      No crew assigned
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => openEdit(f)}
-                    className="text-blue-600 mr-3"
+            {/* Planned Flights Section */}
+            {planned.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="6"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(f.id)}
-                    className="text-red-600"
+                    Planned ({planned.length})
+                  </td>
+                </tr>
+                {planned.map(renderFlightRow)}
+              </>
+            )}
+
+            {/* Departed Flights Section */}
+            {departed.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="6"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    Departed ({departed.length})
+                  </td>
+                </tr>
+                {departed.map(renderFlightRow)}
+              </>
+            )}
+
+            {/* Delayed Flights Section */}
+            {delayed.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="6"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
+                  >
+                    Delayed ({delayed.length})
+                  </td>
+                </tr>
+                {delayed.map(renderFlightRow)}
+              </>
+            )}
+
+            {/* Arrived Flights Section */}
+            {arrived.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="6"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
+                  >
+                    Arrived ({arrived.length})
+                  </td>
+                </tr>
+                {arrived.map(renderFlightRow)}
+              </>
+            )}
+
+            {/* Cancelled Flights Section */}
+            {cancelled.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="6"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
+                  >
+                    Cancelled ({cancelled.length})
+                  </td>
+                </tr>
+                {cancelled.map(renderFlightRow)}
+              </>
+            )}
           </tbody>
         </table>
       </div>

@@ -1,6 +1,26 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+
+// Add Serilog configuration at the very start of the file
+// before building the application
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.Logger(lc => lc
+        .Filter.ByIncludingOnly(le => le.Properties.ContainsKey("SourceContext") && le.Properties["SourceContext"].ToString().StartsWith("\"FlightManagement.Controllers"))
+        .WriteTo.File(
+            "logs/log.txt",
+            restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {SourceContext} {Message}{NewLine}{Exception}",
+            rollingInterval: RollingInterval.Day
+        )
+    )
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Use Serilog for logging
+builder.Host.UseSerilog();
+
 
 // Add services to the container.
 //sql server connection string

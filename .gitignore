@@ -52,3 +52,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# log files
+logs/*.txt
+
+# Uygulama logları
+FlightManagement/logs/

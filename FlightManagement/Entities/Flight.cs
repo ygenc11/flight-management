@@ -23,6 +23,7 @@ namespace FlightManagement.Entities
 
         public List<Crew> CrewMembers { get; set; } = new List<Crew>();
         public string Status { get; set; } = "Planned";
+        public string StatusDescription { get; set; } = string.Empty;
     }
 
 }
