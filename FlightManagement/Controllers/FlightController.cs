@@ -402,20 +402,39 @@ namespace FlightManagement.Controllers
 
         // PATCH: api/flight/{id}/status
         [HttpPatch("{id}/status")]
-        public async Task<IActionResult> UpdateFlightStatus(int id, [FromBody] string status, string statusDescription = "")
+        [Consumes("application/json")]
+        public async Task<IActionResult> UpdateFlightStatus(int id, [FromBody] UpdateFlightStatusDTO statusDto)
         {
-            var validStatuses = new[] { "Planned", "Delayed", "Cancelled", "Departed", "Arrived" };
-            if (!validStatuses.Contains(status))
+            if (statusDto == null)
             {
-                return BadRequest("Invalid flight status.");
+                _logger.LogWarning("Status DTO is null for flight: {Id}", id);
+                return BadRequest("Status data is required.");
             }
+
+            if (string.IsNullOrEmpty(statusDto.Status))
+            {
+                _logger.LogWarning("Status is null or empty for flight: {Id}", id);
+                return BadRequest("Status is required.");
+            }
+
+            var validStatuses = new[] { "Planned", "Delayed", "Cancelled", "Departed", "Arrived" };
+            if (!validStatuses.Contains(statusDto.Status))
+            {
+                _logger.LogWarning("Invalid flight status: {Status}", statusDto.Status);
+                return BadRequest($"Invalid flight status: {statusDto.Status}. Valid statuses are: {string.Join(", ", validStatuses)}");
+            }
+
             var flight = await _context.Flights.FindAsync(id);
             if (flight == null)
+            {
+                _logger.LogWarning("Flight not found for status update: {Id}", id);
                 return NotFound();
+            }
 
-            flight.Status = status;
-            flight.StatusDescription = statusDescription;
+            flight.Status = statusDto.Status;
+            flight.StatusDescription = statusDto.StatusDescription ?? "";
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Flight status updated: {Id} {FlightNumber} - Status: {Status}", flight.Id, flight.FlightNumber, flight.Status);
             return NoContent();
         }
 

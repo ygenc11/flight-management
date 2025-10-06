@@ -238,6 +238,44 @@ const apiService = {
       throw error;
     }
   },
+
+  async updateFlightStatus(id, status, statusDescription = "") {
+    try {
+      const body = { status, statusDescription };
+      console.log("=== PATCH Request Debug ===");
+      console.log("URL:", `${API_BASE_URL}/flight/${id}/status`);
+      console.log("Body object:", body);
+      console.log("Body JSON:", JSON.stringify(body));
+      console.log("========================");
+
+      const response = await fetch(`${API_BASE_URL}/flight/${id}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("=== Status Update Failed ===");
+        console.error("Status:", response.status);
+        console.error("Response:", errorText);
+        console.error("========================");
+        throw new Error(
+          `Failed to update flight status: ${response.status} - ${errorText}`
+        );
+      }
+
+      console.log("✅ Status updated successfully");
+    } catch (error) {
+      console.error("Error updating flight status:", error);
+      throw error;
+    }
+  },
 };
 
 export default apiService;

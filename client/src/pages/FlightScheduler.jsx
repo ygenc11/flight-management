@@ -9,7 +9,7 @@ import {
   Clock,
   MapPin,
 } from "lucide-react";
-import flightDataJson from "../data/flightData.json";
+import apiService from "../services/apiService";
 import { processFlightData } from "../utils/flightDataProcessor";
 
 // Current Time Indicator Component
@@ -88,13 +88,14 @@ const CurrentTimeIndicator = ({ viewMode, startDate, scrollDays = 0 }) => {
 const TimelineHeader = ({ timeSlots, viewMode }) => {
   const formatTime = (date) => {
     if (viewMode === "daily") {
-      const time = date.toLocaleTimeString("tr-TR", {
+      const time = date.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false,
       });
       // Show date at midnight
       if (date.getHours() === 0) {
-        const day = date.toLocaleDateString("tr-TR", {
+        const day = date.toLocaleDateString("en-US", {
           day: "numeric",
           month: "short",
         });
@@ -102,7 +103,7 @@ const TimelineHeader = ({ timeSlots, viewMode }) => {
       }
       return time;
     } else {
-      return date.toLocaleDateString("tr-TR", {
+      return date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       });
@@ -136,15 +137,19 @@ const TimelineHeader = ({ timeSlots, viewMode }) => {
 
 // Flight Block Component
 const FlightBlock = ({ flight, onDragStart, onClick }) => {
+  if (!flight) return null;
+
   const getStatusColor = () => {
     switch (flight.status) {
-      case "cancelled":
+      case "Cancelled":
         return "bg-red-500 border-red-700 hover:bg-red-600";
-      case "delayed":
+      case "Delayed":
         return "bg-orange-500 border-orange-700 hover:bg-orange-600";
-      case "completed":
+      case "Arrived":
         return "bg-green-500 border-green-700 hover:bg-green-600";
-      case "scheduled":
+      case "Departed":
+        return "bg-purple-500 border-purple-700 hover:bg-purple-600";
+      case "Planned":
         return "bg-blue-500 border-blue-700 hover:bg-blue-600";
       default:
         return "bg-gray-500 border-gray-700 hover:bg-gray-600";
@@ -153,14 +158,16 @@ const FlightBlock = ({ flight, onDragStart, onClick }) => {
 
   const getStatusText = () => {
     switch (flight.status) {
-      case "cancelled":
-        return "İptal";
-      case "delayed":
-        return "Gecikme";
-      case "completed":
-        return "Tamamlandı";
-      case "scheduled":
-        return "Planlandı";
+      case "Cancelled":
+        return "Cancelled";
+      case "Delayed":
+        return "Delayed";
+      case "Arrived":
+        return "Arrived";
+      case "Departed":
+        return "Departed";
+      case "Planned":
+        return "Planned";
       default:
         return "";
     }
@@ -251,14 +258,16 @@ const ScheduleRow = ({
           );
         })}
 
-        {item.flights?.map((flight) => (
-          <FlightBlock
-            key={flight.id}
-            flight={flight}
-            onDragStart={() => {}}
-            onClick={onFlightClick}
-          />
-        ))}
+        {(item.flights || [])
+          .filter((f) => f && f.id)
+          .map((flight) => (
+            <FlightBlock
+              key={flight.id}
+              flight={flight}
+              onDragStart={() => {}}
+              onClick={onFlightClick}
+            />
+          ))}
       </div>
     </div>
   );
@@ -270,13 +279,15 @@ const FlightDetailModal = ({ flight, onClose }) => {
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
-      case "cancelled":
+      case "Cancelled":
         return "bg-red-100 text-red-800 border-red-300";
-      case "delayed":
+      case "Delayed":
         return "bg-orange-100 text-orange-800 border-orange-300";
-      case "completed":
+      case "Arrived":
         return "bg-green-100 text-green-800 border-green-300";
-      case "scheduled":
+      case "Departed":
+        return "bg-purple-100 text-purple-800 border-purple-300";
+      case "Planned":
         return "bg-blue-100 text-blue-800 border-blue-300";
       default:
         return "bg-gray-100 text-gray-800 border-gray-300";
@@ -285,14 +296,16 @@ const FlightDetailModal = ({ flight, onClose }) => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case "cancelled":
-        return "İptal Edildi";
-      case "delayed":
-        return "Gecikme";
-      case "completed":
-        return "Tamamlandı";
-      case "scheduled":
-        return "Planlandı";
+      case "Cancelled":
+        return "Cancelled";
+      case "Delayed":
+        return "Delayed";
+      case "Arrived":
+        return "Arrived";
+      case "Departed":
+        return "Departed";
+      case "Planned":
+        return "Planned";
       default:
         return "";
     }
@@ -340,48 +353,135 @@ const FlightDetailModal = ({ flight, onClose }) => {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-gray-600">
                 <MapPin className="w-4 h-4" />
-                <span className="text-sm font-medium">Kalkış</span>
+                <span className="text-sm font-medium">Departure</span>
               </div>
               <div className="pl-6">
                 <div className="text-lg font-bold text-gray-900">
                   {flight.departure}
                 </div>
                 <div className="text-sm text-gray-600">{flight.from}</div>
+                {flight.departureTime && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(flight.departureTime).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-gray-600">
                 <MapPin className="w-4 h-4" />
-                <span className="text-sm font-medium">Varış</span>
+                <span className="text-sm font-medium">Arrival</span>
               </div>
               <div className="pl-6">
                 <div className="text-lg font-bold text-gray-900">
                   {flight.arrival}
                 </div>
                 <div className="text-sm text-gray-600">{flight.to}</div>
+                {flight.arrivalTime && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(flight.arrivalTime).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {flight.passengers !== undefined && (
-            <div className="border-t pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm text-gray-600">Yolcu Sayısı</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {flight.passengers}
-                  </div>
+          {flight.departureTime && flight.arrivalTime && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-900">
+                    Flight Duration
+                  </span>
                 </div>
-                <div>
-                  <div className="text-sm text-gray-600">Mürettebat</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {flight.crew}
-                  </div>
+                <div className="text-lg font-bold text-blue-900">
+                  {(() => {
+                    const duration =
+                      new Date(flight.arrivalTime) -
+                      new Date(flight.departureTime);
+                    const hours = Math.floor(duration / (1000 * 60 * 60));
+                    const minutes = Math.floor(
+                      (duration % (1000 * 60 * 60)) / (1000 * 60)
+                    );
+                    return `${hours}h ${minutes}m`;
+                  })()}
                 </div>
               </div>
             </div>
           )}
+
+          <div className="border-t pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              {flight.passengers !== undefined && (
+                <div>
+                  <div className="text-sm text-gray-600">Passengers</div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {flight.passengers}
+                  </div>
+                </div>
+              )}
+
+              <div className="col-span-2">
+                <div className="text-sm text-gray-600 mb-2 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Crew Members ({flight.crewMembers?.length || 0})
+                </div>
+                {flight.crewMembers && flight.crewMembers.length > 0 ? (
+                  <div className="space-y-2">
+                    {flight.crewMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold text-sm">
+                              {member.firstName?.charAt(0)}
+                              {member.lastName?.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">
+                              {member.firstName} {member.lastName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              License: {member.licenseNumber || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold capitalize">
+                            {member.role}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 italic">
+                    No crew assigned
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
           {flight.delayReason && (
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -389,7 +489,7 @@ const FlightDetailModal = ({ flight, onClose }) => {
                 <Clock className="w-5 h-5 text-orange-600 mt-0.5" />
                 <div>
                   <div className="font-semibold text-orange-900">
-                    Gecikme Sebebi
+                    Delay Reason
                   </div>
                   <div className="text-sm text-orange-800 mt-1">
                     {flight.delayReason}
@@ -404,7 +504,9 @@ const FlightDetailModal = ({ flight, onClose }) => {
               <div className="flex items-start gap-2">
                 <X className="w-5 h-5 text-red-600 mt-0.5" />
                 <div>
-                  <div className="font-semibold text-red-900">İptal Sebebi</div>
+                  <div className="font-semibold text-red-900">
+                    Cancellation Reason
+                  </div>
                   <div className="text-sm text-red-800 mt-1">
                     {flight.cancelReason}
                   </div>
@@ -431,6 +533,54 @@ const FlightScheduler = () => {
   const [scrollDays, setScrollDays] = useState(0); // Track how many days we've scrolled
   const [scrollWeeks, setScrollWeeks] = useState(0); // Track how many weeks we've scrolled
   const [scrollMonths, setScrollMonths] = useState(0); // Track how many months we've scrolled
+
+  // Backend data states
+  const [aircraftData, setAircraftData] = useState([]);
+  const [crewData, setCrewData] = useState([]);
+  const [flightsData, setFlightsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data from backend
+  const fetchData = async () => {
+    try {
+      const [aircraft, crew, flights] = await Promise.all([
+        apiService.getAircraft(),
+        apiService.getCrew(),
+        apiService.getFlights(),
+      ]);
+
+      setAircraftData(aircraft);
+      setCrewData(crew);
+      setFlightsData(flights);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      await fetchData();
+      setLoading(false);
+    };
+
+    loadInitialData();
+
+    // Refresh data when window gains focus (user switches back to tab)
+    const handleFocus = () => {
+      fetchData();
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    // Auto-refresh every 30 seconds
+    const refreshInterval = setInterval(fetchData, 30000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      clearInterval(refreshInterval);
+    };
+  }, []);
 
   // Save viewMode to localStorage whenever it changes
   useEffect(() => {
@@ -708,8 +858,70 @@ const FlightScheduler = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Transform backend data to scheduler format
+  const transformedAircraftData = (aircraftData || []).map((aircraft) => ({
+    id: aircraft.id,
+    name: aircraft.model,
+    subtitle: aircraft.tailNumber,
+    flights: (flightsData || [])
+      .filter(
+        (f) =>
+          f && f.aircraftId === aircraft.id && f.departureTime && f.arrivalTime
+      )
+      .map((f) => ({
+        id: f.id,
+        flightNumber: f.flightNumber,
+        route: `${f.departureAirport?.iataCode || ""} → ${
+          f.arrivalAirport?.iataCode || ""
+        }`,
+        from: f.departureAirport?.city || "",
+        to: f.arrivalAirport?.city || "",
+        departureTime: f.departureTime,
+        arrivalTime: f.arrivalTime,
+        status: f.status || "Planned",
+        statusDescription: f.statusDescription || "",
+        passengers: f.aircraft?.seatsCapacity || 0,
+        crew: f.crewMembers?.length || 0,
+        crewMembers: f.crewMembers || [],
+        delayReason: f.status === "Delayed" ? f.statusDescription : null,
+        cancelReason: f.status === "Cancelled" ? f.statusDescription : null,
+      })),
+  }));
+
+  const transformedCrewData = (crewData || []).map((crew) => ({
+    id: crew.id,
+    name: `${crew.firstName} ${crew.lastName}`,
+    subtitle: crew.role,
+    flights: (flightsData || [])
+      .filter(
+        (f) =>
+          f &&
+          f.crewMembers?.some((c) => c.id === crew.id) &&
+          f.departureTime &&
+          f.arrivalTime
+      )
+      .map((f) => ({
+        id: f.id,
+        flightNumber: f.flightNumber,
+        route: `${f.departureAirport?.iataCode || ""} → ${
+          f.arrivalAirport?.iataCode || ""
+        }`,
+        from: f.departureAirport?.city || "",
+        to: f.arrivalAirport?.city || "",
+        departureTime: f.departureTime,
+        arrivalTime: f.arrivalTime,
+        status: f.status || "Planned",
+        statusDescription: f.statusDescription || "",
+        passengers: f.aircraft?.seatsCapacity || 0,
+        crew: f.crewMembers?.length || 0,
+        crewMembers: f.crewMembers || [],
+        delayReason: f.status === "Delayed" ? f.statusDescription : null,
+        cancelReason: f.status === "Cancelled" ? f.statusDescription : null,
+      })),
+  }));
+
   const aircraft = processFlightData(
-    flightDataJson.aircraft,
+    transformedAircraftData,
     today,
     viewMode === "daily"
       ? scrollDays
@@ -720,7 +932,7 @@ const FlightScheduler = () => {
   );
 
   const crew = processFlightData(
-    flightDataJson.crew,
+    transformedCrewData,
     today,
     viewMode === "daily"
       ? scrollDays
@@ -797,6 +1009,17 @@ const FlightScheduler = () => {
     setSelectedFlight(null);
   };
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading flight data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -805,7 +1028,7 @@ const FlightScheduler = () => {
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">
-              {currentDate.toLocaleDateString("tr-TR", {
+              {currentDate.toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -829,10 +1052,10 @@ const FlightScheduler = () => {
                 }`}
               >
                 {mode === "daily"
-                  ? "Günlük"
+                  ? "Daily"
                   : mode === "weekly"
-                  ? "Haftalık"
-                  : "Aylık"}
+                  ? "Weekly"
+                  : "Monthly"}
               </button>
             ))}
           </div>
@@ -894,8 +1117,8 @@ const FlightScheduler = () => {
                        transition-colors text-sm font-medium"
             >
               {isToday()
-                ? "Bugün"
-                : currentDate.toLocaleDateString("tr-TR", {
+                ? "Today"
+                : currentDate.toLocaleDateString("en-US", {
                     day: "numeric",
                     month: "short",
                   })}
@@ -926,7 +1149,7 @@ const FlightScheduler = () => {
                   className="w-48 px-4 py-2 font-bold text-sm text-gray-700 sticky left-0 
                               bg-gray-100 border-r border-gray-300 z-30"
                 >
-                  UÇAKLAR
+                  AIRCRAFT
                 </div>
                 <div className="flex-1" />
               </div>
@@ -957,7 +1180,7 @@ const FlightScheduler = () => {
                   className="w-48 px-4 py-2 font-bold text-sm text-gray-700 sticky left-0 
                               bg-gray-100 border-r border-gray-300 z-30"
                 >
-                  MÜRETTEBAT
+                  CREW
                 </div>
                 <div className="flex-1" />
               </div>

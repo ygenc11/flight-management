@@ -21,6 +21,8 @@ const FlightsManagement = ({
     departureAirportId: "",
     arrivalAirportId: "",
     crewMembers: [],
+    status: "Planned",
+    statusDescription: "",
   });
 
   useEffect(() => {
@@ -37,6 +39,8 @@ const FlightsManagement = ({
       departureAirportId: "",
       arrivalAirportId: "",
       crewMembers: [],
+      status: "Planned",
+      statusDescription: "",
     });
     setIsModalOpen(true);
   };
@@ -51,6 +55,8 @@ const FlightsManagement = ({
       crewMembers: f.crewMembers.map((c) => c.id),
       departureTime: isoToLocalInput(f.departureTime),
       arrivalTime: isoToLocalInput(f.arrivalTime),
+      status: f.status || "Planned",
+      statusDescription: f.statusDescription || "",
     });
     setIsModalOpen(true);
   };
@@ -72,16 +78,48 @@ const FlightsManagement = ({
       };
 
       if (editing) {
-        const updatedFlight = await apiService.updateFlight(
-          editing.id,
-          payload
-        );
-        setFlights((prev) =>
-          prev.map((x) => (x.id === editing.id ? updatedFlight : x))
-        );
+        await apiService.updateFlight(editing.id, payload);
+
+        // Update status separately if it changed
+        if (
+          formData.status !== editing.status ||
+          formData.statusDescription !== editing.statusDescription
+        ) {
+          console.log("Updating status:", {
+            id: editing.id,
+            status: formData.status,
+            statusDescription: formData.statusDescription,
+          });
+          await apiService.updateFlightStatus(
+            editing.id,
+            formData.status,
+            formData.statusDescription
+          );
+        }
+
+        // Refetch the updated flight
+        const updatedFlights = await apiService.getFlights();
+        setFlights(updatedFlights);
       } else {
         const newFlight = await apiService.createFlight(payload);
-        setFlights((prev) => [...prev, newFlight]);
+
+        // Update status if it's not "Planned"
+        if (formData.status !== "Planned" || formData.statusDescription) {
+          console.log("Setting initial status:", {
+            id: newFlight.id,
+            status: formData.status,
+            statusDescription: formData.statusDescription,
+          });
+          await apiService.updateFlightStatus(
+            newFlight.id,
+            formData.status,
+            formData.statusDescription
+          );
+        }
+
+        // Refetch all flights
+        const updatedFlights = await apiService.getFlights();
+        setFlights(updatedFlights);
       }
       setIsModalOpen(false);
     } catch (error) {
@@ -108,21 +146,37 @@ const FlightsManagement = ({
   };
 
   // Group flights by status
-  const planned = flights.filter(
-    (f) => !f.status || f.status.toLowerCase() === "planned"
+  const planned = (flights || []).filter(
+    (f) => f && (!f.status || f.status.toLowerCase() === "planned")
   );
-  const delayed = flights.filter(
-    (f) => f.status && f.status.toLowerCase() === "delayed"
+  const delayed = (flights || []).filter(
+    (f) => f && f.status && f.status.toLowerCase() === "delayed"
   );
-  const departed = flights.filter(
-    (f) => f.status && f.status.toLowerCase() === "departed"
+  const departed = (flights || []).filter(
+    (f) => f && f.status && f.status.toLowerCase() === "departed"
   );
-  const arrived = flights.filter(
-    (f) => f.status && f.status.toLowerCase() === "arrived"
+  const arrived = (flights || []).filter(
+    (f) => f && f.status && f.status.toLowerCase() === "arrived"
   );
-  const cancelled = flights.filter(
-    (f) => f.status && f.status.toLowerCase() === "cancelled"
+  const cancelled = (flights || []).filter(
+    (f) => f && f.status && f.status.toLowerCase() === "cancelled"
   );
+
+  const getStatusBadge = (status) => {
+    const statusColors = {
+      Planned: "bg-blue-100 text-blue-800",
+      Delayed: "bg-orange-100 text-orange-800",
+      Departed: "bg-purple-100 text-purple-800",
+      Arrived: "bg-green-100 text-green-800",
+      Cancelled: "bg-red-100 text-red-800",
+    };
+    const color = statusColors[status] || "bg-gray-100 text-gray-800";
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}>
+        {status || "Planned"}
+      </span>
+    );
+  };
 
   const renderFlightRow = (f) => (
     <tr key={f.id} className="hover:bg-gray-50">
@@ -159,6 +213,14 @@ const FlightsManagement = ({
         )}
       </td>
       <td className="px-6 py-4">
+        <div>{getStatusBadge(f.status)}</div>
+        {f.statusDescription && (
+          <div className="text-xs text-gray-500 mt-1">
+            {f.statusDescription}
+          </div>
+        )}
+      </td>
+      <td className="px-6 py-4">
         <button onClick={() => openEdit(f)} className="text-blue-600 mr-3">
           <Edit2 className="w-4 h-4" />
         </button>
@@ -188,7 +250,7 @@ const FlightsManagement = ({
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
-        <table className="w-full min-w-[900px]">
+        <table className="w-full min-w-[1000px]">
           <thead className="bg-gray-50 border-b">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -205,6 +267,9 @@ const FlightsManagement = ({
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Crew
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Actions
@@ -431,6 +496,46 @@ const FlightsManagement = ({
                   </span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium">Status</label>
+              <select
+                required
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="Planned">Planned</option>
+                <option value="Delayed">Delayed</option>
+                <option value="Departed">Departed</option>
+                <option value="Arrived">Arrived</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">
+                Status Description
+                <span className="text-gray-500 text-xs ml-1">
+                  (Optional - for delays/cancellations)
+                </span>
+              </label>
+              <input
+                type="text"
+                value={formData.statusDescription}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    statusDescription: e.target.value,
+                  })
+                }
+                placeholder="e.g., Weather delay, Mechanical issue..."
+                className="w-full px-3 py-2 border rounded-lg"
+              />
             </div>
           </div>
 

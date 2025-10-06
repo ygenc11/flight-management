@@ -29,7 +29,34 @@ export const processFlightData = (
   }
 
   return items.map((item) => {
-    const processedFlights = item.flights.map((flight) => {
+    // Filter and validate flights
+    const validFlights = (item.flights || []).filter((flight) => {
+      if (!flight || !flight.departureTime || !flight.arrivalTime) {
+        console.warn("Invalid flight data:", flight);
+        return false;
+      }
+
+      const departureDate = new Date(flight.departureTime);
+      const arrivalDate = new Date(flight.arrivalTime);
+
+      // Check if dates are valid
+      if (isNaN(departureDate.getTime()) || isNaN(arrivalDate.getTime())) {
+        console.warn("Invalid flight dates for", flight.flightNumber);
+        return false;
+      }
+
+      // Check if arrival is after departure
+      if (arrivalDate <= departureDate) {
+        console.warn(
+          `Invalid flight dates for ${flight.flightNumber}: arrival before or equal to departure`
+        );
+        return false;
+      }
+
+      return true;
+    });
+
+    const processedFlights = validFlights.map((flight) => {
       const departureDate = new Date(flight.departureTime);
       const arrivalDate = new Date(flight.arrivalTime);
 
@@ -45,7 +72,7 @@ export const processFlightData = (
           (arrivalDate - departureDate) / (1000 * 60 * 60);
 
         startOffset = hoursFromStart * slotWidth;
-        width = flightDurationHours * slotWidth;
+        width = Math.max(flightDurationHours * slotWidth, 20); // Minimum width
       } else if (viewMode === "weekly") {
         // For weekly view, calculate in days
         const daysFromStart =
@@ -70,13 +97,15 @@ export const processFlightData = (
         ...flight,
         startOffset: Math.round(startOffset),
         width: Math.round(width),
-        departure: departureDate.toLocaleTimeString("tr-TR", {
+        departure: departureDate.toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
+          hour12: false,
         }),
-        arrival: arrivalDate.toLocaleTimeString("tr-TR", {
+        arrival: arrivalDate.toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
+          hour12: false,
         }),
       };
     });
