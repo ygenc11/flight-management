@@ -142,6 +142,59 @@ const CasePage = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-update flight status to "Arrived" if arrival time has passed
+  useEffect(() => {
+    const checkAndUpdateFlightStatus = async () => {
+      const now = dayjs.utc();
+      const flightsToUpdate = flights.filter((flight) => {
+        const arrivalTime = dayjs.utc(flight.arrival.time);
+        // Update if: arrival time passed AND status is not Cancelled or already Arrived
+        return (
+          arrivalTime.isBefore(now) &&
+          flight.status !== "Cancelled" &&
+          flight.status !== "Arrived"
+        );
+      });
+
+      // Update each flight that needs status change
+      for (const flight of flightsToUpdate) {
+        try {
+          const updateData = {
+            flightNumber: flight.flightNumber,
+            aircraftId: flight.aircraftId,
+            departureTime: flight.departure.time,
+            arrivalTime: flight.arrival.time,
+            departureAirportId: flight.departure.airportId,
+            arrivalAirportId: flight.arrival.airportId,
+            crewMemberIds: flight.crewMembers.map((c) => c.id),
+            status: "Arrived", // Change status to Arrived
+          };
+
+          await apiService.updateFlight(flight.id, updateData);
+
+          // Update local state
+          setFlights((prevFlights) =>
+            prevFlights.map((f) =>
+              f.id === flight.id ? { ...f, status: "Arrived" } : f
+            )
+          );
+        } catch (error) {
+          console.error(
+            `Failed to update flight ${flight.flightNumber}:`,
+            error
+          );
+        }
+      }
+    };
+
+    // Check every minute
+    const statusTimer = setInterval(checkAndUpdateFlightStatus, 60000);
+    // Also check immediately on mount
+    checkAndUpdateFlightStatus();
+
+    return () => clearInterval(statusTimer);
+  }, [flights]);
+
   // Filter flights by selected date
   // Show flight if it departs, arrives, or is in progress on the selected date
   const filteredFlights = flights.filter((flight) => {
