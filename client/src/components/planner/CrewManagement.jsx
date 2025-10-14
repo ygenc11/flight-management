@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, User } from "lucide-react";
+import { Plus, Edit2, Trash2, User, Search } from "lucide-react";
 import Modal from "./Modal";
 
 const CrewManagement = ({ crew, setCrew, apiService }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -67,14 +68,25 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
     return "bg-gray-100 text-gray-700";
   };
 
+  // Filter crew by search term
+  const filteredCrew = crew.filter(
+    (c) =>
+      c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Group crew by role
-  const pilots = crew.filter(
+  const pilots = filteredCrew.filter(
     (c) =>
       c.role.toLowerCase().includes("pilot") &&
       !c.role.toLowerCase().includes("co")
   );
-  const coPilots = crew.filter((c) => c.role.toLowerCase().includes("copilot"));
-  const attendants = crew.filter((c) =>
+  const coPilots = filteredCrew.filter((c) =>
+    c.role.toLowerCase().includes("copilot")
+  );
+  const attendants = filteredCrew.filter((c) =>
     c.role.toLowerCase().includes("attendant")
   );
 
@@ -85,13 +97,22 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
           <h2 className="text-3xl font-bold">Crew Management</h2>
           <p className="text-gray-600">Manage crew and licenses</p>
         </div>
-        <div>
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
+              className="pl-9 pr-3 py-1.5 text-sm border rounded-lg w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <button
             onClick={openCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center"
+            className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors"
+            title="Add Crew Member"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
+            <Plus className="w-5 h-5" />
           </button>
         </div>
       </div>

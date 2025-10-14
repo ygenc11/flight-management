@@ -192,7 +192,7 @@ const AircraftRow = ({
         )}
 
         {/* Current Time Line */}
-        <CurrentTimeLine />
+        <CurrentTimeLine selectedDate={selectedDate} />
 
         {/* Uçuşlar */}
         {aircraftFlights.map((flight) => {

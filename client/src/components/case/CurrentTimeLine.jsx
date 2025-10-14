@@ -5,8 +5,8 @@ import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 
-// Red time indicator line for all sections
-export const CurrentTimeLine = () => {
+// Red time indicator line for all sections - only shows on current day
+export const CurrentTimeLine = ({ selectedDate }) => {
   const [currentTime, setCurrentTime] = useState(dayjs.utc());
 
   useEffect(() => {
@@ -16,6 +16,15 @@ export const CurrentTimeLine = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Check if selected date is today (same UTC date)
+  const isToday =
+    selectedDate.format("YYYY-MM-DD") === currentTime.format("YYYY-MM-DD");
+
+  // Don't render if not today
+  if (!isToday) {
+    return null;
+  }
 
   const pixelsPerHour = 60;
   const hoursSinceMidnight = currentTime.hour() + currentTime.minute() / 60;
@@ -33,7 +42,7 @@ export const CurrentTimeLine = () => {
 };
 
 // Time Badge Component - Sticky header için ayrı component
-export const CurrentTimeLabel = () => {
+export const CurrentTimeLabel = ({ selectedDate }) => {
   const [currentTime, setCurrentTime] = useState(dayjs.utc());
   const pixelsPerHour = 60;
 
@@ -44,6 +53,15 @@ export const CurrentTimeLabel = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Check if selected date is today (same UTC date)
+  const isToday =
+    selectedDate.format("YYYY-MM-DD") === currentTime.format("YYYY-MM-DD");
+
+  // Don't render if not today
+  if (!isToday) {
+    return null;
+  }
 
   const calculatePosition = () => {
     const startOfDay = dayjs.utc().startOf("day");

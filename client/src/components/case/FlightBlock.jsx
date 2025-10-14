@@ -192,6 +192,28 @@ const FlightBlock = ({ flight, style, crewRole, onDragStart, onDragEnd }) => {
                 <span>{flight.passengers}</span>
               </div>
 
+              {/* Crew Members */}
+              {flight.crewMembers && flight.crewMembers.length > 0 && (
+                <div className="border-t border-gray-700 pt-1.5 mt-1.5">
+                  <div className="text-gray-400 text-xs mb-1">Crew:</div>
+                  <div className="space-y-0.5">
+                    {flight.crewMembers.map((crew) => (
+                      <div
+                        key={crew.id}
+                        className="flex justify-between text-xs"
+                      >
+                        <span className="text-gray-300">
+                          {crew.firstName} {crew.lastName}
+                        </span>
+                        <span className="text-blue-400 font-medium">
+                          {crew.role}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {crewRole && (
                 <div className="flex justify-between border-t border-gray-700 pt-1.5 mt-1.5">
                   <span className="text-gray-400">Your Role:</span>

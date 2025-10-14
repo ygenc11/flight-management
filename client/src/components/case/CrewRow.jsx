@@ -81,7 +81,7 @@ const CrewRow = ({ crew, flights, section = "captain", selectedDate }) => {
         })}
 
         {/* Current Time Line */}
-        <CurrentTimeLine />
+        <CurrentTimeLine selectedDate={selectedDate} />
 
         {/* Uçuşlar */}
         {crewFlights.map((flight) => {

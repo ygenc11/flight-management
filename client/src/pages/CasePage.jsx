@@ -76,6 +76,7 @@ const CasePage = () => {
               c.role?.toLowerCase() === "flight attendant"
           )
           .map((c) => c.id) || [],
+      crewMembers: flightDto.crewMembers || [], // Crew bilgilerinin tamamını sakla
       status: flightDto.status || "Planned",
       duration: dayjs(flightDto.arrivalTime).diff(
         dayjs(flightDto.departureTime),
@@ -466,7 +467,7 @@ const CasePage = () => {
                   AIRCRAFT ({aircrafts.length})
                 </div>
                 <div className="flex-1 relative">
-                  <CurrentTimeLabel />
+                  <CurrentTimeLabel selectedDate={selectedDate} />
                 </div>
               </div>
 

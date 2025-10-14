@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Clock } from "lucide-react";
+import { Plus, Edit2, Trash2, Clock, Search } from "lucide-react";
 import Modal from "./Modal";
 import { isoToLocalInput, localInputToIso } from "../../utils/dateHelpers";
 
@@ -13,6 +13,7 @@ const FlightsManagement = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     flightNumber: "",
     departureTime: "",
@@ -145,20 +146,33 @@ const FlightsManagement = ({
     return air ? `${air.tailNumber} - ${air.model}` : "-";
   };
 
-  // Group flights by status
-  const planned = (flights || []).filter(
+  // Filter flights by search term
+  const filteredFlights = flights.filter(
+    (f) =>
+      f.flightNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.departureAirport?.iataCode
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      f.arrivalAirport?.iataCode
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      f.status.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Group filtered flights by status
+  const planned = (filteredFlights || []).filter(
     (f) => f && (!f.status || f.status.toLowerCase() === "planned")
   );
-  const departed = (flights || []).filter(
+  const departed = (filteredFlights || []).filter(
     (f) => f && f.status && f.status.toLowerCase() === "departed"
   );
-  const arrived = (flights || []).filter(
+  const arrived = (filteredFlights || []).filter(
     (f) => f && f.status && f.status.toLowerCase() === "arrived"
   );
-  const delayed = (flights || []).filter(
+  const delayed = (filteredFlights || []).filter(
     (f) => f && f.status && f.status.toLowerCase() === "delayed"
   );
-  const cancelled = (flights || []).filter(
+  const cancelled = (filteredFlights || []).filter(
     (f) => f && f.status && f.status.toLowerCase() === "cancelled"
   );
 
@@ -238,13 +252,22 @@ const FlightsManagement = ({
           <h2 className="text-3xl font-bold">Flights</h2>
           <p className="text-gray-600">Plan flights and assign crew/aircraft</p>
         </div>
-        <div>
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
+              className="pl-9 pr-3 py-1.5 text-sm border rounded-lg w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <button
             onClick={openCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center"
+            className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors"
+            title="Add Flight"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Flight
+            <Plus className="w-5 h-5" />
           </button>
         </div>
       </div>

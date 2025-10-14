@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Plane } from "lucide-react";
+import { Plus, Edit2, Trash2, Plane, Search } from "lucide-react";
 import Modal from "./Modal";
 
 const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     model: "",
     tailNumber: "",
@@ -69,6 +70,12 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
       prev.map((x) => (x.id === id ? { ...x, isActive: !x.isActive } : x))
     );
 
+  const filteredAircraft = aircraft.filter(
+    (a) =>
+      a.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.tailNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -80,12 +87,21 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
           <div className="text-sm text-gray-600">
             Active: {aircraft.filter((a) => a.isActive).length}
           </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
+              className="pl-9 pr-3 py-1.5 text-sm border rounded-lg w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <button
             onClick={openCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center"
+            className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors"
+            title="Add Aircraft"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
+            <Plus className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -112,7 +128,7 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y">
-            {aircraft.map((a) => (
+            {filteredAircraft.map((a) => (
               <tr key={a.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 flex items-center">
                   <Plane className="w-5 h-5 text-gray-400 mr-3" />
