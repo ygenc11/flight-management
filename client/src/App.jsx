@@ -3,6 +3,8 @@ import "./App.css";
 import HomePage from "./pages/HomePage";
 import FlightScheduler from "./pages/FlightScheduler";
 ("./pages/FlightScheduler");
+import TestScheduler from "./pages/TestScheduler";
+import CasePage from "./pages/CasePage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -24,6 +26,8 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="planner" element={<PlannerPage />} />
           <Route path="scheduler" element={<FlightScheduler />} />
+          <Route path="test-scheduler" element={<TestScheduler />} />
+          <Route path="case" element={<CasePage />} />
         </Route>
       </Routes>
     </Router>

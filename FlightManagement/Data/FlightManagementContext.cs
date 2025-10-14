@@ -15,12 +15,15 @@ namespace FlightManagement.Data
 
         // DbSets
         public DbSet<Flight> Flights { get; set; }
-        public DbSet<Crew> CrewMembers { get; set; }
+        public DbSet<Crew> Crews { get; set; }
         public DbSet<Aircraft> Aircraft { get; set; }
         public DbSet<Airport> Airports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Explicitly set table name for Crew entity
+            modelBuilder.Entity<Crew>().ToTable("CrewMembers");
+
             // Configure many-to-many relationship between Flight and Crew
             modelBuilder.Entity<Flight>()
                 .HasMany(f => f.CrewMembers)
@@ -49,11 +52,6 @@ namespace FlightManagement.Data
             // Unique constraint on Airport IATA code
             modelBuilder.Entity<Airport>()
                 .HasIndex(a => a.IataCode)
-                .IsUnique();
-
-            // Unique constraint on Airport ICAO code
-            modelBuilder.Entity<Airport>()
-                .HasIndex(a => a.IcaoCode)
                 .IsUnique();
 
             // Unique constraint on Aircraft TailNumber

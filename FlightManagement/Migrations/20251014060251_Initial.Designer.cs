@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlightManagement.Migrations
 {
     [DbContext(typeof(FlightManagementContext))]
-    [Migration("20251005134622_Initial")]
+    [Migration("20251014060251_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -96,7 +96,6 @@ namespace FlightManagement.Migrations
                         .HasColumnType("nvarchar(3)");
 
                     b.Property<string>("IcaoCode")
-                        .IsRequired()
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
@@ -107,9 +106,6 @@ namespace FlightManagement.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IataCode")
-                        .IsUnique();
-
-                    b.HasIndex("IcaoCode")
                         .IsUnique();
 
                     b.ToTable("Airports");
@@ -144,7 +140,7 @@ namespace FlightManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CrewMembers");
+                    b.ToTable("CrewMembers", (string)null);
                 });
 
             modelBuilder.Entity("FlightManagement.Entities.Flight", b =>

@@ -37,6 +37,18 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
+// Register Repositories
+builder.Services.AddScoped<FlightManagement.Repositories.IAircraftRepository, FlightManagement.Repositories.AircraftRepository>();
+builder.Services.AddScoped<FlightManagement.Repositories.ICrewRepository, FlightManagement.Repositories.CrewRepository>();
+builder.Services.AddScoped<FlightManagement.Repositories.IAirportRepository, FlightManagement.Repositories.AirportRepository>();
+builder.Services.AddScoped<FlightManagement.Repositories.IFlightRepository, FlightManagement.Repositories.FlightRepository>();
+
+// Register Services
+builder.Services.AddScoped<FlightManagement.Services.IAircraftService, FlightManagement.Services.AircraftService>();
+builder.Services.AddScoped<FlightManagement.Services.ICrewService, FlightManagement.Services.CrewService>();
+builder.Services.AddScoped<FlightManagement.Services.IAirportService, FlightManagement.Services.AirportService>();
+builder.Services.AddScoped<FlightManagement.Services.IFlightService, FlightManagement.Services.FlightService>();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {

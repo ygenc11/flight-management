@@ -107,6 +107,24 @@ const Navbar = () => {
                   Scheduler
                 </Link>
               </li>
+              <li>
+                <Link
+                  to={"/test-scheduler"}
+                  className={
+                    isActive("/test-scheduler") ? activeClass : defaultClass
+                  }
+                >
+                  Test Scheduler
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to={"/case"}
+                  className={isActive("/case") ? activeClass : defaultClass}
+                >
+                  Case Scheduler
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

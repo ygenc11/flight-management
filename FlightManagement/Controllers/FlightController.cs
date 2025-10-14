@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FlightManagement.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using FlightManagement.DTO;
-using FlightManagement.Entities;
-
+using FlightManagement.Services;
 
 namespace FlightManagement.Controllers
 {
@@ -15,12 +12,12 @@ namespace FlightManagement.Controllers
     [Route("api/[controller]")]
     public class FlightController : ControllerBase
     {
-        // dependency injection of the DbContext
-        private readonly FlightManagementContext _context;
+        private readonly IFlightService _flightService;
         private readonly ILogger<FlightController> _logger;
-        public FlightController(FlightManagementContext context, ILogger<FlightController> logger)
+
+        public FlightController(IFlightService flightService, ILogger<FlightController> logger)
         {
-            _context = context;
+            _flightService = flightService;
             _logger = logger;
         }
 
@@ -28,12 +25,7 @@ namespace FlightManagement.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FlightDTO>>> GetAllFlights()
         {
-            var flightList = await _context.Flights
-                .Include(f => f.CrewMembers)
-                .Include(f => f.Aircraft)
-                .Include(f => f.DepartureAirport)
-                .Include(f => f.ArrivalAirport)
-                .ToListAsync();
+            var flightList = await _flightService.GetAllFlightsAsync();
 
             var flightDtoList = flightList.Select(f => new FlightDTO
             {
@@ -81,19 +73,14 @@ namespace FlightManagement.Controllers
                     LicenseNumber = c.LicenseNumber
                 }).ToList()
             }).ToList();
-            _logger.LogDebug("All flights listed. Count: {Count}", flightDtoList.Count);
+
             return Ok(flightDtoList);
         }
         // GET: api/flight/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<FlightDTO>> GetFlightById(int id)
         {
-            var flight = await _context.Flights
-                .Include(f => f.CrewMembers)
-                .Include(f => f.Aircraft)
-                .Include(f => f.DepartureAirport)
-                .Include(f => f.ArrivalAirport)
-                .FirstOrDefaultAsync(f => f.Id == id);
+            var flight = await _flightService.GetFlightWithDetailsAsync(id);
 
             if (flight == null)
             {
@@ -154,103 +141,76 @@ namespace FlightManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateFlight(CreateFlightDTO flightDto)
         {
-            var aircraft = await _context.Aircraft.FindAsync(flightDto.AircraftId);
-            if (aircraft == null)
+            // Validate all flight data using service
+            var (isValid, errorMessage) = await _flightService.ValidateFlightCreationAsync(
+                flightDto.DepartureTime,
+                flightDto.ArrivalTime,
+                flightDto.AircraftId,
+                flightDto.DepartureAirportId,
+                flightDto.ArrivalAirportId,
+                flightDto.CrewMemberIds);
+
+            if (!isValid)
             {
-                _logger.LogWarning("Invalid aircraft ID: {AircraftId}", flightDto.AircraftId);
-                return BadRequest("Invalid aircraft ID.");
+                _logger.LogWarning("Flight creation validation failed: {Error}", errorMessage);
+                return BadRequest(errorMessage);
             }
 
-            var departureAirport = await _context.Airports.FindAsync(flightDto.DepartureAirportId);
-            if (departureAirport == null)
+            // Create flight
+            var flight = await _flightService.CreateFlightAsync(
+                flightDto.FlightNumber,
+                flightDto.DepartureTime,
+                flightDto.ArrivalTime,
+                flightDto.AircraftId,
+                flightDto.DepartureAirportId,
+                flightDto.ArrivalAirportId,
+                flightDto.CrewMemberIds);
+
+            // Get flight with details for response
+            var flightWithDetails = await _flightService.GetFlightWithDetailsAsync(flight.Id);
+            if (flightWithDetails == null)
             {
-                _logger.LogWarning("Invalid departure airport ID: {DepartureAirportId}", flightDto.DepartureAirportId);
-                return BadRequest("Invalid departure airport ID.");
+                return StatusCode(500, "Flight created but could not retrieve details.");
             }
 
-            var arrivalAirport = await _context.Airports.FindAsync(flightDto.ArrivalAirportId);
-            if (arrivalAirport == null)
-            {
-                _logger.LogWarning("Invalid arrival airport ID: {ArrivalAirportId}", flightDto.ArrivalAirportId);
-                return BadRequest("Invalid arrival airport ID.");
-            }
-
-            var crewMembers = await _context.CrewMembers
-                .Where(c => flightDto.CrewMemberIds.Contains(c.Id))
-                .ToListAsync();
-
-            if (crewMembers.Count != flightDto.CrewMemberIds.Count)
-            {
-                _logger.LogWarning("Invalid crew member IDs for flight creation.");
-                return BadRequest("One or more crew member IDs are invalid.");
-            }
-
-            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
-            if (!crewMembers.All(c => validRoles.Contains(c.Role.ToLowerInvariant())))
-            {
-                _logger.LogWarning("Invalid crew member role for flight creation.");
-                return BadRequest("Invalid crew member role.");
-            }
-            if (!crewMembers.Any(c => c.Role == "pilot"))
-            {
-                _logger.LogWarning("No pilot assigned for flight creation.");
-                return BadRequest("At least one Pilot is required for each flight.");
-            }
-            if (!crewMembers.Any(c => c.Role == "copilot"))
-            {
-                _logger.LogWarning("No copilot assigned for flight creation.");
-                return BadRequest("At least one CoPilot is required for each flight.");
-            }
-
-            var flight = new Entities.Flight
-            {
-                FlightNumber = flightDto.FlightNumber,
-                DepartureTime = flightDto.DepartureTime,
-                ArrivalTime = flightDto.ArrivalTime,
-                AircraftId = flightDto.AircraftId,
-                DepartureAirportId = flightDto.DepartureAirportId,
-                ArrivalAirportId = flightDto.ArrivalAirportId,
-                CrewMembers = crewMembers
-            };
-
-            _context.Flights.Add(flight);
-            await _context.SaveChangesAsync();
-
+            // Map to DTO for response
             var responseDto = new FlightDTO
             {
-                Id = flight.Id,
-                FlightNumber = flight.FlightNumber,
-                DepartureTime = flight.DepartureTime,
-                ArrivalTime = flight.ArrivalTime,
-                AircraftId = flight.AircraftId,
-                DepartureAirportId = flight.DepartureAirportId,
-                ArrivalAirportId = flight.ArrivalAirportId,
-                Aircraft = new AircraftDTO
+                Id = flightWithDetails.Id,
+                FlightNumber = flightWithDetails.FlightNumber,
+                DepartureTime = flightWithDetails.DepartureTime,
+                ArrivalTime = flightWithDetails.ArrivalTime,
+                AircraftId = flightWithDetails.AircraftId,
+                DepartureAirportId = flightWithDetails.DepartureAirportId,
+                ArrivalAirportId = flightWithDetails.ArrivalAirportId,
+                Status = flightWithDetails.Status,
+                StatusDescription = flightWithDetails.StatusDescription,
+                Aircraft = flightWithDetails.Aircraft != null ? new AircraftDTO
                 {
-                    Id = aircraft.Id,
-                    Model = aircraft.Model,
-                    TailNumber = aircraft.TailNumber,
-                    SeatsCapacity = aircraft.SeatsCapacity
-                },
-                DepartureAirport = new AirportDTO
+                    Id = flightWithDetails.Aircraft.Id,
+                    Model = flightWithDetails.Aircraft.Model,
+                    TailNumber = flightWithDetails.Aircraft.TailNumber,
+                    SeatsCapacity = flightWithDetails.Aircraft.SeatsCapacity
+                } : new AircraftDTO(),
+                DepartureAirport = flightWithDetails.DepartureAirport != null ? new AirportDTO
                 {
-                    Id = departureAirport.Id,
-                    Name = departureAirport.Name,
-                    IataCode = departureAirport.IataCode,
-                    IcaoCode = departureAirport.IcaoCode,
-                    City = departureAirport.City,
-                    Country = departureAirport.Country
-                },
-                ArrivalAirport = new AirportDTO
+                    Id = flightWithDetails.DepartureAirport.Id,
+                    Name = flightWithDetails.DepartureAirport.Name,
+                    IataCode = flightWithDetails.DepartureAirport.IataCode,
+                    IcaoCode = flightWithDetails.DepartureAirport.IcaoCode,
+                    City = flightWithDetails.DepartureAirport.City,
+                    Country = flightWithDetails.DepartureAirport.Country
+                } : new AirportDTO(),
+                ArrivalAirport = flightWithDetails.ArrivalAirport != null ? new AirportDTO
                 {
-                    Id = arrivalAirport.Id,
-                    Name = arrivalAirport.Name,
-                    IataCode = arrivalAirport.IataCode,
-                    IcaoCode = arrivalAirport.IcaoCode,
-                    City = arrivalAirport.City,
-                    Country = arrivalAirport.Country
-                },
-                CrewMembers = crewMembers.Select(c => new CrewDTO
+                    Id = flightWithDetails.ArrivalAirport.Id,
+                    Name = flightWithDetails.ArrivalAirport.Name,
+                    IataCode = flightWithDetails.ArrivalAirport.IataCode,
+                    IcaoCode = flightWithDetails.ArrivalAirport.IcaoCode,
+                    City = flightWithDetails.ArrivalAirport.City,
+                    Country = flightWithDetails.ArrivalAirport.Country
+                } : new AirportDTO(),
+                CrewMembers = flightWithDetails.CrewMembers.Select(c => new CrewDTO
                 {
                     Id = c.Id,
                     FirstName = c.FirstName,
@@ -260,184 +220,113 @@ namespace FlightManagement.Controllers
                 }).ToList()
             };
 
-            _logger.LogInformation("Flight created: {Id} {FlightNumber}", flight.Id, flight.FlightNumber);
-            return CreatedAtAction(nameof(GetFlightById), new { id = flight.Id }, responseDto);
+            _logger.LogInformation("Flight created successfully: {Id} - {FlightNumber} from {DepartureAirport} to {ArrivalAirport}",
+                flight.Id, flight.FlightNumber, flightWithDetails.DepartureAirport?.IataCode ?? "N/A", flightWithDetails.ArrivalAirport?.IataCode ?? "N/A");
+
+            return CreatedAtAction(nameof(GetFlightById), new { id = responseDto.Id }, responseDto);
         }
 
         // PUT: api/flight/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFlight(int id, CreateFlightDTO flightDto)
         {
-            var flight = await _context.Flights
-                .Include(f => f.CrewMembers)
-                .FirstOrDefaultAsync(f => f.Id == id);
-
-            if (flight == null)
-            {
-                _logger.LogError("Flight not found for update: {Id}", id);
-                return NotFound();
-            }
-
-            var crewMembers = await _context.CrewMembers
-                .Where(c => flightDto.CrewMemberIds.Contains(c.Id))
-                .ToListAsync();
-
-            if (crewMembers.Count != flightDto.CrewMemberIds.Count)
-            {
-                _logger.LogWarning("Invalid crew member IDs for flight update.");
-                return BadRequest("One or more crew member IDs are invalid.");
-            }
-
-            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
-            if (!crewMembers.All(c => validRoles.Contains(c.Role.ToLowerInvariant())))
-            {
-                _logger.LogWarning("Invalid crew member role for flight update.");
-                return BadRequest("Invalid crew member role.");
-            }
-            if (!crewMembers.Any(c => c.Role == "pilot"))
-            {
-                _logger.LogWarning("No pilot assigned for flight update.");
-                return BadRequest("At least one Pilot is required for each flight.");
-            }
-            if (!crewMembers.Any(c => c.Role == "copilot"))
-            {
-                _logger.LogWarning("No copilot assigned for flight update.");
-                return BadRequest("At least one CoPilot is required for each flight.");
-            }
-
-            flight.FlightNumber = flightDto.FlightNumber;
-            flight.DepartureTime = flightDto.DepartureTime;
-            flight.ArrivalTime = flightDto.ArrivalTime;
-            flight.AircraftId = flightDto.AircraftId;
-            flight.DepartureAirportId = flightDto.DepartureAirportId;
-            flight.ArrivalAirportId = flightDto.ArrivalAirportId;
-
-            // Update crew members
-            flight.CrewMembers.Clear();
-            flight.CrewMembers = crewMembers;
-
-            _context.Entry(flight).State = EntityState.Modified;
             try
             {
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Flight updated: {Id} {FlightNumber}", flight.Id, flight.FlightNumber);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FlightExists(id))
+                _logger.LogInformation("Flight update request received for flight {Id}. Status from request: '{Status}'", id, flightDto.Status);
+
+                // Validate all flight data using service
+                var (isValid, errorMessage) = await _flightService.ValidateFlightUpdateAsync(
+                    id,
+                    flightDto.DepartureTime,
+                    flightDto.ArrivalTime,
+                    flightDto.AircraftId,
+                    flightDto.DepartureAirportId,
+                    flightDto.ArrivalAirportId,
+                    flightDto.CrewMemberIds);
+
+                if (!isValid)
                 {
-                    _logger.LogError("Flight not found after concurrency exception: {Id}", id);
+                    _logger.LogWarning("Flight update validation failed for flight {Id}: {Error}", id, errorMessage);
+                    return BadRequest(errorMessage);
+                }
+
+                // Update flight
+                var success = await _flightService.UpdateFlightAsync(
+                    id,
+                    flightDto.FlightNumber,
+                    flightDto.DepartureTime,
+                    flightDto.ArrivalTime,
+                    flightDto.AircraftId,
+                    flightDto.DepartureAirportId,
+                    flightDto.ArrivalAirportId,
+                    flightDto.CrewMemberIds,
+                    flightDto.Status);
+
+                if (!success)
+                {
+                    _logger.LogError("Flight not found for update: {Id}", id);
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
-            }
-            return NoContent();
-        }
 
-        private bool FlightExists(int id)
-        {
-            return _context.Flights.Any(e => e.Id == id);
-        }
-        // DELETE: api/flight/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteFlight(int id)
-        {
-            var flight = await _context.Flights.FindAsync(id);
-            if (flight == null)
+                _logger.LogInformation("Flight {Id} updated successfully with status: {Status}", id, flightDto.Status);
+                return NoContent();
+            }
+            catch (Exception ex)
             {
-                _logger.LogError("Flight not found for delete: {Id}", id);
-                return NotFound();
+                _logger.LogError(ex, "Error updating flight {Id}", id);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
-            _context.Flights.Remove(flight);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Flight deleted: {Id} {FlightNumber}", flight.Id, flight.FlightNumber);
-            return NoContent();
-        }
-        // POST: api/flight/{id}/assign-crew
-        [HttpPost("{id}/assign-crew")]
-        public async Task<IActionResult> AssignCrew(int id, List<int> crewIds)
-        {
-            var flight = await _context.Flights
-                .Include(f => f.CrewMembers)
-                .FirstOrDefaultAsync(f => f.Id == id);
-
-            if (flight == null)
-            {
-                return NotFound();
-            }
-
-            var crewMembers = await _context.CrewMembers
-                .Where(c => crewIds.Contains(c.Id))
-                .ToListAsync();
-
-            if (crewMembers.Count != crewIds.Count)
-            {
-                return BadRequest("One or more crew member IDs are invalid.");
-            }
-
-            var validRoles = new[] { "pilot", "copilot", "flightattendant" };
-            if (!crewMembers.All(c => validRoles.Contains(c.Role)))
-            {
-                return BadRequest("Invalid crew member role.");
-            }
-            if (!crewMembers.Any(c => c.Role == "pilot"))
-            {
-                return BadRequest("At least one pilot is required for each flight.");
-            }
-            if (!crewMembers.Any(c => c.Role == "copilot"))
-            {
-                return BadRequest("At least one copilot is required for each flight.");
-            }
-
-            // Önceki ekip üyelerini temizle ve yenilerini ata
-            flight.CrewMembers.Clear();
-            flight.CrewMembers = crewMembers;
-
-            await _context.SaveChangesAsync();
-            return NoContent();
         }
 
         // PATCH: api/flight/{id}/status
         [HttpPatch("{id}/status")]
-        [Consumes("application/json")]
         public async Task<IActionResult> UpdateFlightStatus(int id, [FromBody] UpdateFlightStatusDTO statusDto)
         {
-            if (statusDto == null)
+            try
             {
-                _logger.LogWarning("Status DTO is null for flight: {Id}", id);
-                return BadRequest("Status data is required.");
+                _logger.LogInformation("Flight status update request received for flight {Id}. New status: '{Status}'", id, statusDto.Status);
+
+                var success = await _flightService.UpdateFlightStatusAsync(id, statusDto.Status, statusDto.StatusDescription ?? string.Empty);
+
+                if (!success)
+                {
+                    _logger.LogWarning("Flight not found for status update: {Id}", id);
+                    return NotFound($"Flight with ID {id} not found.");
+                }
+
+                _logger.LogInformation("Flight {Id} status updated successfully to: {Status}", id, statusDto.Status);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating flight status for flight {Id}", id);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // DELETE: api/flight/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteFlight(int id)
+        {
+            // Check if flight can be deleted
+            var (canDelete, errorMessage) = await _flightService.CanDeleteFlightAsync(id);
+            if (!canDelete)
+            {
+                _logger.LogWarning("Cannot delete flight {Id}: {Error}", id, errorMessage);
+                return BadRequest(errorMessage);
             }
 
-            if (string.IsNullOrEmpty(statusDto.Status))
+            // Delete flight
+            var success = await _flightService.DeleteFlightAsync(id);
+            if (!success)
             {
-                _logger.LogWarning("Status is null or empty for flight: {Id}", id);
-                return BadRequest("Status is required.");
-            }
-
-            var validStatuses = new[] { "Planned", "Delayed", "Cancelled", "Departed", "Arrived" };
-            if (!validStatuses.Contains(statusDto.Status))
-            {
-                _logger.LogWarning("Invalid flight status: {Status}", statusDto.Status);
-                return BadRequest($"Invalid flight status: {statusDto.Status}. Valid statuses are: {string.Join(", ", validStatuses)}");
-            }
-
-            var flight = await _context.Flights.FindAsync(id);
-            if (flight == null)
-            {
-                _logger.LogWarning("Flight not found for status update: {Id}", id);
+                _logger.LogError("Flight not found for delete: {Id}", id);
                 return NotFound();
             }
 
-            flight.Status = statusDto.Status;
-            flight.StatusDescription = statusDto.StatusDescription ?? "";
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Flight status updated: {Id} {FlightNumber} - Status: {Status}", flight.Id, flight.FlightNumber, flight.Status);
+            _logger.LogInformation("Flight deleted successfully: {Id}", id);
+
             return NoContent();
         }
-
     }
-
 }

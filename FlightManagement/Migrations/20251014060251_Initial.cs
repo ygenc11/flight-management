@@ -35,7 +35,7 @@ namespace FlightManagement.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IataCode = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
-                    IcaoCode = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    IcaoCode = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: true),
                     CountryCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     City = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false)
@@ -134,12 +134,6 @@ namespace FlightManagement.Migrations
                 name: "IX_Airports_IataCode",
                 table: "Airports",
                 column: "IataCode",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Airports_IcaoCode",
-                table: "Airports",
-                column: "IcaoCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(

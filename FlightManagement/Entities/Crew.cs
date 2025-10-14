@@ -10,12 +10,12 @@ namespace FlightManagement.Entities
         public int Id { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty; // e.g., Pilot, Co-Pilot, Flight Attendant
+        public string Role { get; set; } = string.Empty; // e.g., pilot, copilot
         public string LicenseNumber { get; set; } = string.Empty; // Applicable for pilots
 
-        // Many-to-many relationship with flights
-        public List<Flight> Flights { get; set; } = new List<Flight>();
-
         public bool IsActive { get; set; } = true;
+
+        // Many-to-many relationship with Flight
+        public ICollection<Flight> Flights { get; set; } = new List<Flight>();
     }
 }

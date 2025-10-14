@@ -19,9 +19,9 @@ namespace FlightManagement.Entities
         public int ArrivalAirportId { get; set; }
         public Airport? ArrivalAirport { get; set; }
 
-        // Navigation property for the crew members
+        // Many-to-many relationship with Crew
+        public ICollection<Crew> CrewMembers { get; set; } = new List<Crew>();
 
-        public List<Crew> CrewMembers { get; set; } = new List<Crew>();
         public string Status { get; set; } = "Planned";
         public string StatusDescription { get; set; } = string.Empty;
     }

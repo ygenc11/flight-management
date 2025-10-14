@@ -21,6 +21,7 @@ namespace FlightManagement.DTO
         public AirportDTO ArrivalAirport { get; set; } = new();
 
         public List<CrewDTO> CrewMembers { get; set; } = new();
+
         public string Status { get; set; } = "Planned";
         public string StatusDescription { get; set; } = string.Empty;
 

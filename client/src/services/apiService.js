@@ -71,6 +71,7 @@ const apiService = {
         ...aircraft,
         registration: aircraft.tailNumber, // DTO uses tailNumber, UI expects registration
         capacity: aircraft.seatsCapacity, // DTO uses seatsCapacity, UI expects capacity
+        type: aircraft.model, // DTO uses model, UI expects type
       }));
     } catch (error) {
       console.error("Error fetching aircraft:", error);

@@ -533,7 +533,6 @@ const FlightScheduler = () => {
   const [scrollDays, setScrollDays] = useState(0); // Track how many days we've scrolled
   const [scrollWeeks, setScrollWeeks] = useState(0); // Track how many weeks we've scrolled
   const [scrollMonths, setScrollMonths] = useState(0); // Track how many months we've scrolled
-  const [currentUTCTime, setCurrentUTCTime] = useState(new Date());
 
   // Backend data states
   const [aircraftData, setAircraftData] = useState([]);
@@ -587,15 +586,6 @@ const FlightScheduler = () => {
   useEffect(() => {
     localStorage.setItem("flightSchedulerViewMode", viewMode);
   }, [viewMode]);
-
-  // Update UTC time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentUTCTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   // Generate extended timeline (5 days: 2 before, current, 2 after)
   const generateExtendedTimeSlots = () => {
@@ -1035,23 +1025,15 @@ const FlightScheduler = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Flight Scheduler</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
-                {currentDate.toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 border-l border-gray-300 pl-4">
-              <Clock className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
-                UTC: {currentUTCTime.toUTCString().split(" ")[4]}
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">
+              {currentDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
           </div>
         </div>
 

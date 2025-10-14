@@ -93,7 +93,6 @@ namespace FlightManagement.Migrations
                         .HasColumnType("nvarchar(3)");
 
                     b.Property<string>("IcaoCode")
-                        .IsRequired()
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
@@ -104,9 +103,6 @@ namespace FlightManagement.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IataCode")
-                        .IsUnique();
-
-                    b.HasIndex("IcaoCode")
                         .IsUnique();
 
                     b.ToTable("Airports");
@@ -141,7 +137,7 @@ namespace FlightManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CrewMembers");
+                    b.ToTable("CrewMembers", (string)null);
                 });
 
             modelBuilder.Entity("FlightManagement.Entities.Flight", b =>

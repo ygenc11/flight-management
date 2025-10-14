@@ -17,5 +17,7 @@ namespace FlightManagement.DTO
         public int ArrivalAirportId { get; set; }
 
         public List<int> CrewMemberIds { get; set; } = new();
+
+        public string Status { get; set; } = "Planned"; // Default status
     }
 }

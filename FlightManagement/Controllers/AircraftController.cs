@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FlightManagement.Data;
 using FlightManagement.DTO;
+using FlightManagement.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace FlightManagement.Controllers
@@ -14,28 +13,31 @@ namespace FlightManagement.Controllers
     [Route("api/[controller]")]
     public class AircraftController : ControllerBase
     {
-        //dependency injection of the DbContext
-        private readonly FlightManagementContext _context;
         private readonly ILogger<AircraftController> _logger;
-        public AircraftController(FlightManagementContext context, ILogger<AircraftController> logger)
+        private readonly IAircraftService _aircraftService;
+
+        public AircraftController(
+            ILogger<AircraftController> logger,
+            IAircraftService aircraftService)
         {
-            _context = context;
             _logger = logger;
+            _aircraftService = aircraftService;
         }
 
         // GET: api/aircraft
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AircraftDTO>>> GetAllAircraft()
         {
-            var aircraftList = await _context.Aircraft.ToListAsync();
-            var dtoList = aircraftList.Where(p => p.IsActive).Select(a => new AircraftDTO
+            var aircraftList = await _aircraftService.GetAllActiveAircraftAsync();
+
+            var dtoList = aircraftList.Select(aircraft => new AircraftDTO
             {
-                Id = a.Id,
-                Model = a.Model,
-                TailNumber = a.TailNumber, // DTO'da Registration varsa
-                SeatsCapacity = a.SeatsCapacity,  // DTO'da Capacity varsa
+                Id = aircraft.Id,
+                Model = aircraft.Model,
+                TailNumber = aircraft.TailNumber,
+                SeatsCapacity = aircraft.SeatsCapacity
             }).ToList();
-            _logger.LogDebug("All aircraft listed. Count: {Count}", dtoList.Count);
+
             return Ok(dtoList);
         }
 
@@ -43,7 +45,7 @@ namespace FlightManagement.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AircraftDTO>> GetAircraftById(int id)
         {
-            var aircraft = await _context.Aircraft.FindAsync(id);
+            var aircraft = await _aircraftService.GetAircraftByIdAsync(id);
             if (aircraft == null)
             {
                 _logger.LogWarning("Aircraft not found: {Id}", id);
@@ -64,51 +66,65 @@ namespace FlightManagement.Controllers
         [HttpPost]
         public async Task<ActionResult<AircraftDTO>> CreateAircraft(CreateAircraftDTO aircraftDto)
         {
-            var aircraft = new Entities.Aircraft
+            // Validate using service
+            var (isValid, errorMessage) = await _aircraftService.ValidateAircraftCreationAsync(
+                aircraftDto.TailNumber,
+                aircraftDto.SeatsCapacity);
+
+            if (!isValid)
             {
-                Model = aircraftDto.Model,
-                TailNumber = aircraftDto.TailNumber,
-                SeatsCapacity = aircraftDto.SeatsCapacity,
-                IsActive = true // entityde isactive otomatik true olarak ayarlanıyor yani buraya yazmasak da olur
+                _logger.LogWarning("Aircraft creation validation failed: {Error}", errorMessage);
+                return BadRequest(errorMessage);
+            }
+
+            // Create using service
+            var aircraft = await _aircraftService.CreateAircraftAsync(
+                aircraftDto.Model,
+                aircraftDto.TailNumber,
+                aircraftDto.SeatsCapacity);
+
+            var dto = new AircraftDTO
+            {
+                Id = aircraft.Id,
+                Model = aircraft.Model,
+                TailNumber = aircraft.TailNumber,
+                SeatsCapacity = aircraft.SeatsCapacity
             };
-            _context.Aircraft.Add(aircraft);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Aircraft created: {Id} {Model}", aircraft.Id, aircraft.Model);
-            return CreatedAtAction(nameof(GetAircraftById), new { id = aircraft.Id }, aircraft);
+
+            _logger.LogInformation("Aircraft created successfully: {Id} - {Model} ({TailNumber})", aircraft.Id, aircraft.Model, aircraft.TailNumber);
+            return CreatedAtAction(nameof(GetAircraftById), new { id = aircraft.Id }, dto);
         }
 
         // PUT: api/aircraft/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAircraft(int id, CreateAircraftDTO aircraft)
+        public async Task<IActionResult> UpdateAircraft(int id, CreateAircraftDTO aircraftDto)
         {
-            var existingAircraft = await _context.Aircraft.FindAsync(id);
-            if (existingAircraft == null)
+            // Validate using service
+            var (isValid, errorMessage) = await _aircraftService.ValidateAircraftUpdateAsync(
+                id,
+                aircraftDto.TailNumber,
+                aircraftDto.SeatsCapacity);
+
+            if (!isValid)
+            {
+                _logger.LogWarning("Aircraft update validation failed for ID {Id}: {Error}", id, errorMessage);
+                return BadRequest(errorMessage);
+            }
+
+            // Update using service
+            var updated = await _aircraftService.UpdateAircraftAsync(
+                id,
+                aircraftDto.Model,
+                aircraftDto.TailNumber,
+                aircraftDto.SeatsCapacity);
+
+            if (!updated)
             {
                 _logger.LogError("Aircraft not found for update: {Id}", id);
                 return NotFound();
             }
-            existingAircraft.Model = aircraft.Model;
-            existingAircraft.TailNumber = aircraft.TailNumber;
-            existingAircraft.SeatsCapacity = aircraft.SeatsCapacity;
 
-            _context.Entry(existingAircraft).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Aircraft updated: {Id} {Model}", existingAircraft.Id, existingAircraft.Model);
-            }
-            catch (Exception)
-            {
-                if (!_context.Aircraft.Any(e => e.Id == id))
-                {
-                    _logger.LogError("Aircraft not found after exception: {Id}", id);
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _logger.LogInformation("Aircraft updated successfully: {Id} - {Model} ({TailNumber})", id, aircraftDto.Model, aircraftDto.TailNumber);
             return NoContent();
         }
 
@@ -116,15 +132,22 @@ namespace FlightManagement.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAircraft(int id)
         {
-            var aircraft = await _context.Aircraft.FindAsync(id);
-            if (aircraft == null)
+            // Check if aircraft can be deleted
+            var (canDelete, errorMessage) = await _aircraftService.CanDeleteAircraftAsync(id);
+            if (!canDelete)
+            {
+                _logger.LogWarning("Cannot delete aircraft: {Id} - {Error}", id, errorMessage);
+                return BadRequest(errorMessage);
+            }
+
+            // Soft delete using service
+            var deleted = await _aircraftService.SoftDeleteAircraftAsync(id);
+            if (!deleted)
             {
                 _logger.LogError("Aircraft not found for delete: {Id}", id);
                 return NotFound();
             }
-            _context.Aircraft.Remove(aircraft);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Aircraft deleted: {Id} {Model}", aircraft.Id, aircraft.Model);
+
             return NoContent();
         }
 
