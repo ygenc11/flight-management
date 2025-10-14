@@ -2,17 +2,47 @@
 import React, { useState } from "react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { getStatusColor } from "../../data/caseFlightData";
+import { getStatusColor } from "../../utils/flightUtils";
 
 dayjs.extend(utc);
 
-const FlightBlock = ({ flight, style, crewRole }) => {
+const FlightBlock = ({ flight, style, crewRole, onDragStart, onDragEnd }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({
     vertical: "top", // 'top' or 'bottom'
     horizontal: "center", // 'left', 'center', or 'right'
   });
+  const [isDragging, setIsDragging] = useState(false);
   const blockRef = React.useRef(null);
+
+  const handleDragStart = (e) => {
+    setIsDragging(true);
+    setShowTooltip(false);
+
+    // Store flight data for drop handling
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({
+        flightId: flight.id,
+        currentAircraftId: flight.aircraftId,
+        duration: dayjs
+          .utc(flight.arrival.time)
+          .diff(dayjs.utc(flight.departure.time), "minute"),
+      })
+    );
+
+    if (onDragStart) {
+      onDragStart(flight);
+    }
+  };
+
+  const handleDragEnd = (e) => {
+    setIsDragging(false);
+    if (onDragEnd) {
+      onDragEnd(flight);
+    }
+  };
 
   const departureTime = dayjs.utc(flight.departure.time).format("HH:mm");
   const arrivalTime = dayjs.utc(flight.arrival.time).format("HH:mm");
@@ -63,10 +93,15 @@ const FlightBlock = ({ flight, style, crewRole }) => {
   return (
     <div
       ref={blockRef}
-      className="absolute top-2 bottom-2 rounded-lg shadow-md cursor-pointer transform transition-all hover:scale-105 hover:shadow-xl"
+      draggable={true}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      className={`absolute top-2 bottom-2 rounded-lg shadow-md cursor-move transform transition-all hover:scale-105 hover:shadow-xl ${
+        isDragging ? "opacity-50" : ""
+      }`}
       style={{
         ...style,
-        zIndex: showTooltip ? 10000 : 20,
+        zIndex: showTooltip ? 10000 : isDragging ? 1000 : 20,
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setShowTooltip(false)}

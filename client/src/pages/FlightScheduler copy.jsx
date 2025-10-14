@@ -20,10 +20,10 @@ const generateTimeSlots = (startDate, viewMode) => {
     const year = start.getFullYear();
     const month = start.getMonth();
     const date = start.getDate();
-    
+
     // Dünden başla
     const previousDay = new Date(year, month, date - 1, 0, 0, 0, 0);
-    
+
     for (let i = 0; i < 72; i++) {
       const slot = new Date(previousDay.getTime() + i * 60 * 60 * 1000);
       slots.push(slot);
@@ -168,13 +168,15 @@ const TimelineHeader = ({ timeSlots, viewMode }) => {
 const FlightBlock = ({ flight, onDragStart, onClick }) => {
   const getStatusColor = () => {
     switch (flight.status) {
-      case "cancelled":
+      case "Cancelled":
         return "bg-red-500 border-red-700 hover:bg-red-600";
-      case "delayed":
+      case "Delayed":
         return "bg-orange-500 border-orange-700 hover:bg-orange-600";
-      case "completed":
+      case "Arrived":
         return "bg-green-500 border-green-700 hover:bg-green-600";
-      case "scheduled":
+      case "Departed":
+        return "bg-purple-500 border-purple-700 hover:bg-purple-600";
+      case "Planned":
         return "bg-blue-500 border-blue-700 hover:bg-blue-600";
       default:
         return "bg-gray-500 border-gray-700 hover:bg-gray-600";
@@ -183,14 +185,16 @@ const FlightBlock = ({ flight, onDragStart, onClick }) => {
 
   const getStatusText = () => {
     switch (flight.status) {
-      case "cancelled":
-        return "İptal";
-      case "delayed":
-        return "Gecikme";
-      case "completed":
-        return "Tamamlandı";
-      case "scheduled":
-        return "Planlandı";
+      case "Cancelled":
+        return "Cancelled";
+      case "Delayed":
+        return "Delayed";
+      case "Arrived":
+        return "Arrived";
+      case "Departed":
+        return "Departed";
+      case "Planned":
+        return "Planned";
       default:
         return "";
     }
@@ -295,13 +299,15 @@ const FlightDetailModal = ({ flight, onClose }) => {
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
-      case "cancelled":
+      case "Cancelled":
         return "bg-red-100 text-red-800 border-red-300";
-      case "delayed":
+      case "Delayed":
         return "bg-orange-100 text-orange-800 border-orange-300";
-      case "completed":
+      case "Arrived":
         return "bg-green-100 text-green-800 border-green-300";
-      case "scheduled":
+      case "Departed":
+        return "bg-purple-100 text-purple-800 border-purple-300";
+      case "Planned":
         return "bg-blue-100 text-blue-800 border-blue-300";
       default:
         return "bg-gray-100 text-gray-800 border-gray-300";
@@ -310,14 +316,16 @@ const FlightDetailModal = ({ flight, onClose }) => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case "cancelled":
-        return "İptal Edildi";
-      case "delayed":
-        return "Gecikme";
-      case "completed":
-        return "Tamamlandı";
-      case "scheduled":
-        return "Planlandı";
+      case "Cancelled":
+        return "Cancelled";
+      case "Delayed":
+        return "Delayed";
+      case "Arrived":
+        return "Arrived";
+      case "Departed":
+        return "Departed";
+      case "Planned":
+        return "Planned";
       default:
         return "";
     }
@@ -456,7 +464,11 @@ const FlightScheduler = () => {
 
   // Scroll başlangıcını ortaya (bugünün başına) ayarla - sadece ilk mount'ta
   useEffect(() => {
-    if (scrollContainerRef.current && viewMode === "daily" && isInitialMount.current) {
+    if (
+      scrollContainerRef.current &&
+      viewMode === "daily" &&
+      isInitialMount.current
+    ) {
       // 24 saat * 120px = 2880px (bugünün başlangıcı)
       setTimeout(() => {
         scrollContainerRef.current.scrollLeft = 2880;
@@ -473,7 +485,7 @@ const FlightScheduler = () => {
     let timeoutId;
     const handleScroll = () => {
       if (isScrolling.current) return;
-      
+
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         const scrollLeft = container.scrollLeft;

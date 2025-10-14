@@ -1,6 +1,7 @@
 // src/components/case/CrewRow.jsx
 import React from "react";
 import FlightBlock from "./FlightBlock";
+import { CurrentTimeLine } from "./CurrentTimeLine";
 import { Users } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -52,7 +53,7 @@ const CrewRow = ({ crew, flights, section = "captain", selectedDate }) => {
   };
 
   return (
-    <div className="flex border-b border-gray-200 hover:bg-gray-50 transition-colors">
+    <div className="flex border-b border-gray-200 hover:bg-gray-50 transition-colors relative">
       {/* Crew Info */}
       <div className="w-48 flex-shrink-0 sticky left-0 bg-white border-r border-gray-300 px-4 py-4 flex items-center gap-3 z-10">
         <Users className="w-5 h-5 text-green-600" />
@@ -73,10 +74,14 @@ const CrewRow = ({ crew, flights, section = "captain", selectedDate }) => {
               style={{
                 left: `${i * pixelsPerHour}px`,
                 width: `${pixelsPerHour}px`,
+                zIndex: 1,
               }}
             />
           );
         })}
+
+        {/* Current Time Line */}
+        <CurrentTimeLine />
 
         {/* Uçuşlar */}
         {crewFlights.map((flight) => {

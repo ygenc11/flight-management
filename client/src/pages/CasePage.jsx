@@ -47,13 +47,17 @@ const CasePage = () => {
         airport: flightDto.departureAirport?.iataCode || "",
         name: flightDto.departureAirport?.name || "",
         time: flightDto.departureTime,
+        airportId: flightDto.departureAirportId,
       },
       arrival: {
         airport: flightDto.arrivalAirport?.iataCode || "",
         name: flightDto.arrivalAirport?.name || "",
         time: flightDto.arrivalTime,
+        airportId: flightDto.arrivalAirportId,
       },
       aircraftId: flightDto.aircraftId,
+      departureAirportId: flightDto.departureAirportId,
+      arrivalAirportId: flightDto.arrivalAirportId,
       captain: flightDto.crewMembers?.find(
         (c) =>
           c.role?.toLowerCase() === "pilot" ||
@@ -72,7 +76,7 @@ const CasePage = () => {
               c.role?.toLowerCase() === "flight attendant"
           )
           .map((c) => c.id) || [],
-      status: flightDto.status?.toLowerCase() || "scheduled",
+      status: flightDto.status || "Planned",
       duration: dayjs(flightDto.arrivalTime).diff(
         dayjs(flightDto.departureTime),
         "minute"
@@ -197,6 +201,89 @@ const CasePage = () => {
       setError("Failed to refresh data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle flight drop - update flight time and aircraft
+  const handleFlightDrop = async (
+    flightId,
+    newAircraftId,
+    newDepartureTime,
+    newArrivalTime
+  ) => {
+    try {
+      // Check for collisions before updating
+      const flight = flights.find((f) => f.id === flightId);
+      if (!flight) return;
+
+      // Check if new time slot conflicts with existing flights
+      const hasConflict = flights.some((f) => {
+        if (f.id === flightId) return false; // Skip same flight
+        if (f.aircraftId !== newAircraftId) return false; // Different aircraft
+
+        const existingStart = dayjs.utc(f.departure.time);
+        const existingEnd = dayjs.utc(f.arrival.time);
+        const newStart = dayjs.utc(newDepartureTime);
+        const newEnd = dayjs.utc(newArrivalTime);
+
+        // Check if times overlap
+        return (
+          (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) ||
+          (existingStart.isBefore(newEnd) && existingEnd.isAfter(newStart))
+        );
+      });
+
+      if (hasConflict) {
+        alert(
+          "Time slot conflict! This aircraft is already scheduled for another flight at this time."
+        );
+        return;
+      }
+
+      // Optimistic update - update UI immediately
+      setFlights((prevFlights) =>
+        prevFlights.map((f) =>
+          f.id === flightId
+            ? {
+                ...f,
+                aircraftId: newAircraftId,
+                departure: { ...f.departure, time: newDepartureTime },
+                arrival: { ...f.arrival, time: newArrivalTime },
+              }
+            : f
+        )
+      );
+
+      // Prepare full flight data for backend (PUT requires all fields)
+      const crewMemberIds = [];
+      if (flight.captain) crewMemberIds.push(flight.captain);
+      if (flight.firstOfficer) crewMemberIds.push(flight.firstOfficer);
+      if (flight.cabinCrew && flight.cabinCrew.length > 0) {
+        crewMemberIds.push(...flight.cabinCrew);
+      }
+
+      const updateData = {
+        flightNumber: flight.flightNumber,
+        aircraftId: newAircraftId,
+        departureTime: newDepartureTime,
+        arrivalTime: newArrivalTime,
+        departureAirportId:
+          flight.departure.airportId || flight.departureAirportId,
+        arrivalAirportId: flight.arrival.airportId || flight.arrivalAirportId,
+        crewMemberIds: crewMemberIds,
+        status: flight.status,
+      };
+
+      await apiService.updateFlight(flightId, updateData);
+
+      // Optionally show success message
+      console.log(`Flight ${flight.flightNumber} updated successfully`);
+    } catch (err) {
+      console.error("Error updating flight:", err);
+      alert("Failed to update flight. Please try again.");
+
+      // Rollback on error - refresh data from backend
+      handleRefresh();
     }
   };
 
@@ -337,6 +424,8 @@ const CasePage = () => {
                     aircraft={aircraft}
                     flights={filteredFlights}
                     selectedDate={selectedDate}
+                    onFlightDrop={handleFlightDrop}
+                    scrollContainerRef={scrollContainerRef}
                   />
                 ))}
               </div>

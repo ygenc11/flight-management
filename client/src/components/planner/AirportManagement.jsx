@@ -89,93 +89,99 @@ const AirportManagement = ({ airports, setAirports, apiService }) => {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            Airport Management
-          </h2>
-          <p className="text-gray-600">Manage airports in your network</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search airports..."
-              className="pl-10 pr-4 py-2 border rounded-lg w-72"
-            />
+    <div>
+      {/* Sticky Header */}
+      <div className="bg-white border-b px-8 py-6 sticky top-[73px] z-20">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Airport Management
+            </h2>
+            <p className="text-gray-600">Manage airports in your network</p>
           </div>
-          <button
-            onClick={openCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add
-          </button>
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search airports..."
+                className="pl-10 pr-4 py-2 border rounded-lg w-72"
+              />
+            </div>
+            <button
+              onClick={openCreate}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-        <table className="w-full min-w-[800px]">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                IATA
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                ICAO
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                City
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Country
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y">
-            {filtered.map((a) => (
-              <tr key={a.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 flex items-center">
-                  <Globe className="w-5 h-5 text-gray-400 mr-3" />
-                  {a.name}
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
-                    {a.iataCode}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {a.icaoCode}
-                </td>
-                <td className="px-6 py-4">{a.city}</td>
-                <td className="px-6 py-4">{a.country}</td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => openEdit(a)}
-                    className="text-blue-600 mr-3"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(a.id)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </td>
+      {/* Content */}
+      <div className="p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+          <table className="w-full min-w-[800px]">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  IATA
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  ICAO
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  City
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Country
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y">
+              {filtered.map((a) => (
+                <tr key={a.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 flex items-center">
+                    <Globe className="w-5 h-5 text-gray-400 mr-3" />
+                    {a.name}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
+                      {a.iataCode}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {a.icaoCode}
+                  </td>
+                  <td className="px-6 py-4">{a.city}</td>
+                  <td className="px-6 py-4">{a.country}</td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => openEdit(a)}
+                      className="text-blue-600 mr-3"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(a.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Modal

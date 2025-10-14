@@ -23,17 +23,11 @@ export const CurrentTimeLine = () => {
 
   return (
     <div
-      className="absolute top-0 bottom-0 z-20 pointer-events-none"
-      style={{ left: `${leftPosition}px` }}
+      className="absolute top-0 bottom-0 pointer-events-none"
+      style={{ left: `${leftPosition}px`, zIndex: 100 }}
     >
-      {/* Main red line with glow */}
-      <div className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-red-400 to-red-600 shadow-lg shadow-red-500/50" />
-
-      {/* Diamond marker at top */}
-      <div className="absolute -top-1 -left-1.5 w-3 h-3 bg-red-500 border-2 border-red-300 rotate-45 shadow-lg" />
-
-      {/* Diamond marker at bottom */}
-      <div className="absolute -bottom-1 -left-1.5 w-3 h-3 bg-red-500 border-2 border-red-300 rotate-45 shadow-lg" />
+      {/* Thin red line */}
+      <div className="absolute top-0 bottom-0 w-0.5 bg-red-500" />
     </div>
   );
 };

@@ -149,14 +149,14 @@ const FlightsManagement = ({
   const planned = (flights || []).filter(
     (f) => f && (!f.status || f.status.toLowerCase() === "planned")
   );
-  const delayed = (flights || []).filter(
-    (f) => f && f.status && f.status.toLowerCase() === "delayed"
-  );
   const departed = (flights || []).filter(
     (f) => f && f.status && f.status.toLowerCase() === "departed"
   );
   const arrived = (flights || []).filter(
     (f) => f && f.status && f.status.toLowerCase() === "arrived"
+  );
+  const delayed = (flights || []).filter(
+    (f) => f && f.status && f.status.toLowerCase() === "delayed"
   );
   const cancelled = (flights || []).filter(
     (f) => f && f.status && f.status.toLowerCase() === "cancelled"
@@ -165,9 +165,9 @@ const FlightsManagement = ({
   const getStatusBadge = (status) => {
     const statusColors = {
       Planned: "bg-blue-100 text-blue-800",
-      Delayed: "bg-orange-100 text-orange-800",
       Departed: "bg-purple-100 text-purple-800",
       Arrived: "bg-green-100 text-green-800",
+      Delayed: "bg-orange-100 text-orange-800",
       Cancelled: "bg-red-100 text-red-800",
     };
     const color = statusColors[status] || "bg-gray-100 text-gray-800";
@@ -307,21 +307,6 @@ const FlightsManagement = ({
               </>
             )}
 
-            {/* Delayed Flights Section */}
-            {delayed.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="6"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
-                  >
-                    Delayed ({delayed.length})
-                  </td>
-                </tr>
-                {delayed.map(renderFlightRow)}
-              </>
-            )}
-
             {/* Arrived Flights Section */}
             {arrived.length > 0 && (
               <>
@@ -334,6 +319,21 @@ const FlightsManagement = ({
                   </td>
                 </tr>
                 {arrived.map(renderFlightRow)}
+              </>
+            )}
+
+            {/* Delayed Flights Section */}
+            {delayed.length > 0 && (
+              <>
+                <tr className="bg-gray-100">
+                  <td
+                    colSpan="6"
+                    className="px-6 py-2 text-sm font-semibold text-gray-700"
+                  >
+                    Delayed ({delayed.length})
+                  </td>
+                </tr>
+                {delayed.map(renderFlightRow)}
               </>
             )}
 
@@ -511,9 +511,9 @@ const FlightsManagement = ({
                 className="w-full px-3 py-2 border rounded-lg"
               >
                 <option value="Planned">Planned</option>
-                <option value="Delayed">Delayed</option>
                 <option value="Departed">Departed</option>
                 <option value="Arrived">Arrived</option>
+                <option value="Delayed">Delayed</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>

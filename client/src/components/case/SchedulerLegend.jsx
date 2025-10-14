@@ -1,15 +1,14 @@
 // src/components/case/SchedulerLegend.jsx
 import React from "react";
-import { getStatusColor } from "../../data/caseFlightData";
+import { getStatusColor } from "../../utils/flightUtils";
 
 const SchedulerLegend = () => {
   const statuses = [
-    { key: "scheduled", label: "Scheduled" },
-    { key: "boarding", label: "Boarding" },
-    { key: "departed", label: "Departed" },
-    { key: "arrived", label: "Arrived" },
-    { key: "delayed", label: "Delayed" },
-    { key: "cancelled", label: "Cancelled" },
+    { key: "Planned", label: "Planned" },
+    { key: "Departed", label: "Departed" },
+    { key: "Arrived", label: "Arrived" },
+    { key: "Delayed", label: "Delayed" },
+    { key: "Cancelled", label: "Cancelled" },
   ];
 
   return (

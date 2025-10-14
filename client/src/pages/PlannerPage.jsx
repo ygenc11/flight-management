@@ -8,6 +8,9 @@ import apiService from "../services/apiService";
 
 export default function PlannerPage() {
   const [activeTab, setActiveTab] = useState("airports");
+  const [currentUTCTime, setCurrentUTCTime] = useState(
+    new Date().toUTCString()
+  );
 
   // app-level state for all modules
   const [airports, setAirports] = useState([]);
@@ -44,6 +47,15 @@ export default function PlannerPage() {
     fetchInitialData();
   }, []);
 
+  // Update UTC time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentUTCTime(new Date().toUTCString());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -58,11 +70,11 @@ export default function PlannerPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <main className="flex-1">
-        <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <main className="ml-64 min-h-screen">
+        <header className="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center space-x-4">
             <h3 className="text-lg font-semibold">
               Planner / {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
@@ -71,9 +83,7 @@ export default function PlannerPage() {
               Quick operations and management
             </p>
           </div>
-          <div className="text-sm text-gray-600">
-            UTC {new Date().toUTCString()}
-          </div>
+          <div className="text-sm text-gray-600">UTC: {currentUTCTime}</div>
         </header>
 
         <section className="p-6">

@@ -128,8 +128,8 @@ namespace FlightManagement.Services
 
             await _flightRepository.UpdateAsync(flight);
 
-            _logger.LogInformation("Flight updated: {Id} {FlightNumber} Status: {Status} with {CrewCount} crew members",
-                flight.Id, flight.FlightNumber, flight.Status, flight.CrewMembers.Count);
+            _logger.LogInformation("Flight updated: {Id} {FlightNumber} with {CrewCount} crew members",
+                flight.Id, flight.FlightNumber, flight.CrewMembers.Count);
 
             return true;
         }
@@ -209,6 +209,51 @@ namespace FlightManagement.Services
                     departureAirportId);
                 return (false, "Departure and arrival airports cannot be the same.");
             }
+
+            return (true, string.Empty);
+        }
+
+        // Validates crew composition
+        // Rule: Flight must have at least 1 Pilot and 1 CoPilot
+        public async Task<(bool isValid, string errorMessage)> ValidateCrewCompositionAsync(List<int> crewMemberIds)
+        {
+            if (crewMemberIds == null || crewMemberIds.Count == 0)
+            {
+                _logger.LogWarning("Crew composition validation failed: No crew members assigned");
+                return (false, "Flight must have at least 1 Pilot and 1 CoPilot.");
+            }
+
+            // Get all crew members
+            var crewMembers = new List<Crew>();
+            foreach (var crewId in crewMemberIds)
+            {
+                var crew = await _crewRepository.GetByIdAsync(crewId);
+                if (crew != null)
+                {
+                    crewMembers.Add(crew);
+                }
+            }
+
+            // Check for at least 1 Pilot
+            var hasPilot = crewMembers.Any(c => c.Role.Equals("pilot", StringComparison.OrdinalIgnoreCase));
+            if (!hasPilot)
+            {
+                _logger.LogWarning("Crew composition validation failed: No Pilot assigned");
+                return (false, "Flight must have at least 1 Pilot.");
+            }
+
+            // Check for at least 1 CoPilot
+            var hasCoPilot = crewMembers.Any(c => c.Role.Equals("copilot", StringComparison.OrdinalIgnoreCase));
+            if (!hasCoPilot)
+            {
+                _logger.LogWarning("Crew composition validation failed: No CoPilot assigned");
+                return (false, "Flight must have at least 1 CoPilot.");
+            }
+
+            _logger.LogDebug("Crew composition validation passed: {PilotCount} Pilot(s), {CoPilotCount} CoPilot(s), {AttendantCount} Flight Attendant(s)",
+                crewMembers.Count(c => c.Role.Equals("pilot", StringComparison.OrdinalIgnoreCase)),
+                crewMembers.Count(c => c.Role.Equals("copilot", StringComparison.OrdinalIgnoreCase)),
+                crewMembers.Count(c => c.Role.Equals("flightattendant", StringComparison.OrdinalIgnoreCase)));
 
             return (true, string.Empty);
         }
@@ -311,7 +356,14 @@ namespace FlightManagement.Services
                 return airportValidation;
             }
 
-            // 3. Validate aircraft availability
+            // 3. Validate crew composition (at least 1 Pilot and 1 CoPilot)
+            var compositionValidation = await ValidateCrewCompositionAsync(crewMemberIds);
+            if (!compositionValidation.isValid)
+            {
+                return compositionValidation;
+            }
+
+            // 4. Validate aircraft availability
             var aircraftValidation = await ValidateAircraftAvailabilityAsync(
                 aircraftId,
                 departureTime,
@@ -321,7 +373,7 @@ namespace FlightManagement.Services
                 return aircraftValidation;
             }
 
-            // 4. Validate crew availability
+            // 5. Validate crew availability
             var crewValidation = await ValidateAllCrewAvailabilityAsync(
                 crewMemberIds,
                 departureTime,
@@ -359,7 +411,14 @@ namespace FlightManagement.Services
                 return airportValidation;
             }
 
-            // 3. Validate aircraft availability (excluding current flight)
+            // 3. Validate crew composition (at least 1 Pilot and 1 CoPilot)
+            var compositionValidation = await ValidateCrewCompositionAsync(crewMemberIds);
+            if (!compositionValidation.isValid)
+            {
+                return compositionValidation;
+            }
+
+            // 4. Validate aircraft availability (excluding current flight)
             var aircraftValidation = await ValidateAircraftAvailabilityAsync(
                 aircraftId,
                 departureTime,
@@ -370,7 +429,7 @@ namespace FlightManagement.Services
                 return aircraftValidation;
             }
 
-            // 4. Validate crew availability (excluding current flight)
+            // 5. Validate crew availability (excluding current flight)
             var crewValidation = await ValidateAllCrewAvailabilityAsync(
                 crewMemberIds,
                 departureTime,

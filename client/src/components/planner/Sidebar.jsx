@@ -10,7 +10,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 h-screen shadow-xl flex flex-col">
+    <div className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 h-screen fixed left-0 top-0 shadow-xl flex flex-col z-40">
       <div className="p-6 border-b border-slate-700">
         <div className="flex items-center space-x-3">
           <div className="bg-blue-500 p-2 rounded-lg">
@@ -23,7 +23,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         </div>
       </div>
 
-      <nav className="mt-6 flex-1">
+      <nav className="mt-6 flex-1 overflow-y-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (

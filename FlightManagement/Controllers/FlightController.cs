@@ -232,8 +232,6 @@ namespace FlightManagement.Controllers
         {
             try
             {
-                _logger.LogInformation("Flight update request received for flight {Id}. Status from request: '{Status}'", id, flightDto.Status);
-
                 // Validate all flight data using service
                 var (isValid, errorMessage) = await _flightService.ValidateFlightUpdateAsync(
                     id,
@@ -268,7 +266,7 @@ namespace FlightManagement.Controllers
                     return NotFound();
                 }
 
-                _logger.LogInformation("Flight {Id} updated successfully with status: {Status}", id, flightDto.Status);
+                _logger.LogInformation("Flight updated successfully: {Id} - {FlightNumber}", id, flightDto.FlightNumber);
                 return NoContent();
             }
             catch (Exception ex)

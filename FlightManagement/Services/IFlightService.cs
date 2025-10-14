@@ -60,6 +60,9 @@ namespace FlightManagement.Services
 
         (bool isValid, string errorMessage) ValidateAirports(int departureAirportId, int arrivalAirportId);
 
+        // Validates crew composition (at least 1 Pilot and 1 CoPilot)
+        Task<(bool isValid, string errorMessage)> ValidateCrewCompositionAsync(List<int> crewMemberIds);
+
         // Validates aircraft availability (not assigned to another flight at the same time)
 
         Task<(bool isValid, string errorMessage)> ValidateAircraftAvailabilityAsync(
