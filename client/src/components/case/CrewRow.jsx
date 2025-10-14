@@ -2,13 +2,19 @@
 import React from "react";
 import FlightBlock from "./FlightBlock";
 import { CurrentTimeLine } from "./CurrentTimeLine";
-import { Users } from "lucide-react";
+import { Users, Power, PowerOff } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 
-const CrewRow = ({ crew, flights, section = "captain", selectedDate }) => {
+const CrewRow = ({
+  crew,
+  flights,
+  section = "captain",
+  selectedDate,
+  onToggleAvailability,
+}) => {
   // Bu mürettebata ait uçuşları filtrele
   const crewFlights = flights.filter(
     (f) =>
@@ -53,14 +59,46 @@ const CrewRow = ({ crew, flights, section = "captain", selectedDate }) => {
   };
 
   return (
-    <div className="flex border-b border-gray-200 hover:bg-gray-50 transition-colors relative">
+    <div
+      className={`flex border-b border-gray-200 hover:bg-gray-50 transition-colors relative ${
+        !crew.isActive ? "bg-gray-100 opacity-60" : ""
+      }`}
+    >
       {/* Crew Info */}
-      <div className="w-48 flex-shrink-0 sticky left-0 bg-white border-r border-gray-300 px-4 py-4 flex items-center gap-3 z-10">
-        <Users className="w-5 h-5 text-green-600" />
-        <div>
-          <div className="font-semibold text-sm text-gray-900">{crew.name}</div>
-          <div className="text-xs text-gray-500">{crew.role}</div>
+      <div className="w-48 flex-shrink-0 sticky left-0 bg-white border-r border-gray-300 px-4 py-4 flex items-center justify-between z-50">
+        <div className="flex items-center gap-3 flex-1">
+          <Users
+            className={`w-5 h-5 ${
+              crew.isActive ? "text-green-600" : "text-gray-400"
+            }`}
+          />
+          <div>
+            <div
+              className={`font-semibold text-sm ${
+                crew.isActive ? "text-gray-900" : "text-gray-500"
+              }`}
+            >
+              {crew.name}
+            </div>
+            <div className="text-xs text-gray-500">{crew.role}</div>
+          </div>
         </div>
+        <button
+          onClick={() =>
+            onToggleAvailability &&
+            onToggleAvailability(crew.id, !crew.isActive)
+          }
+          className={`ml-2 p-1 rounded hover:bg-gray-200 transition-colors ${
+            crew.isActive ? "text-green-600" : "text-red-600"
+          }`}
+          title={crew.isActive ? "Mark as off duty" : "Mark as on duty"}
+        >
+          {crew.isActive ? (
+            <Power className="w-4 h-4" />
+          ) : (
+            <PowerOff className="w-4 h-4" />
+          )}
+        </button>
       </div>
 
       {/* Timeline */}

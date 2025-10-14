@@ -65,10 +65,31 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
     }
   };
 
-  const toggleStatus = (id) =>
+  const toggleStatus = async (id) => {
+    const aircraftItem = aircraft.find((a) => a.id === id);
+    if (!aircraftItem) return;
+
+    const newIsActive = !aircraftItem.isActive;
+
+    // Optimistic update
     setAircraft((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, isActive: !x.isActive } : x))
+      prev.map((a) => (a.id === id ? { ...a, isActive: newIsActive } : a))
     );
+
+    try {
+      // Backend update
+      await apiService.updateAircraft(id, {
+        ...aircraftItem,
+        isActive: newIsActive,
+      });
+    } catch (error) {
+      // Rollback on error
+      setAircraft((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, isActive: !newIsActive } : a))
+      );
+      alert("Failed to update aircraft status: " + error.message);
+    }
+  };
 
   const filteredAircraft = aircraft.filter(
     (a) =>

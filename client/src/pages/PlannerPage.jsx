@@ -7,7 +7,11 @@ import FlightsManagement from "../components/planner/FlightsManagement";
 import apiService from "../services/apiService";
 
 export default function PlannerPage() {
-  const [activeTab, setActiveTab] = useState("airports");
+  // Load active tab from localStorage or default to "airports"
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem("plannerActiveTab");
+    return savedTab || "airports";
+  });
   const [currentUTCTime, setCurrentUTCTime] = useState(
     new Date().toUTCString()
   );
@@ -46,6 +50,11 @@ export default function PlannerPage() {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("plannerActiveTab", activeTab);
+  }, [activeTab]);
 
   // Update UTC time every second
   useEffect(() => {

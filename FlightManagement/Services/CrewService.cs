@@ -67,7 +67,7 @@ namespace FlightManagement.Services
         /// <summary>
         /// Updates an existing crew member
         /// </summary>
-        public async Task<bool> UpdateCrewMemberAsync(int id, string firstName, string lastName, string role, string licenseNumber)
+        public async Task<bool> UpdateCrewMemberAsync(int id, string firstName, string lastName, string role, string licenseNumber, bool isActive = true)
         {
             var crew = await _crewRepository.GetByIdAsync(id);
             if (crew == null)
@@ -80,11 +80,12 @@ namespace FlightManagement.Services
             crew.LastName = lastName;
             crew.Role = role.ToLowerInvariant();
             crew.LicenseNumber = licenseNumber;
+            crew.IsActive = isActive;
 
             await _crewRepository.UpdateAsync(crew);
 
-            _logger.LogInformation("Crew member updated: {Id} {FirstName} {LastName} ({Role})",
-                crew.Id, crew.FirstName, crew.LastName, crew.Role);
+            _logger.LogInformation("Crew member updated: {Id} {FirstName} {LastName} ({Role}) - Active: {IsActive}",
+                crew.Id, crew.FirstName, crew.LastName, crew.Role, crew.IsActive);
 
             return true;
         }

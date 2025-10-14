@@ -12,7 +12,7 @@ const TimeGrid = ({ selectedDate }) => {
   return (
     <div className="flex border-b border-gray-300 bg-white sticky top-0 z-20">
       {/* Sol boşluk (resource isimleri için) */}
-      <div className="w-48 flex-shrink-0 sticky left-0 bg-white border-r border-gray-300 z-30" />
+      <div className="w-48 flex-shrink-0 sticky left-0 bg-white border-r border-gray-300 z-50" />
 
       {/* Saat başlıkları */}
       <div className="flex flex-1">

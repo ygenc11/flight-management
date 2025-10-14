@@ -60,6 +60,32 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
     }
   };
 
+  const toggleStatus = async (id) => {
+    const crewMember = crew.find((c) => c.id === id);
+    if (!crewMember) return;
+
+    const newIsActive = !crewMember.isActive;
+
+    // Optimistic update
+    setCrew((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, isActive: newIsActive } : c))
+    );
+
+    try {
+      // Backend update
+      await apiService.updateCrew(id, {
+        ...crewMember,
+        isActive: newIsActive,
+      });
+    } catch (error) {
+      // Rollback on error
+      setCrew((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, isActive: !newIsActive } : c))
+      );
+      alert("Failed to update crew status: " + error.message);
+    }
+  };
+
   const badge = (role) => {
     const r = role.toLowerCase();
     if (r.includes("captain")) return "bg-gray-100 text-gray-700";
@@ -98,6 +124,9 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
           <p className="text-gray-600">Manage crew and licenses</p>
         </div>
         <div className="flex items-center space-x-3">
+          <div className="text-sm text-gray-600">
+            Active: {crew.filter((c) => c.isActive).length}
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -131,6 +160,9 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
                 License
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Actions
               </th>
             </tr>
@@ -141,7 +173,7 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
               <>
                 <tr className="bg-gray-100">
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
                     Pilots ({pilots.length})
@@ -163,6 +195,18 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4">{c.licenseNumber}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => toggleStatus(c.id)}
+                        className={`px-3 py-1 rounded-full text-xs ${
+                          c.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {c.isActive ? "Active" : "Inactive"}
+                      </button>
+                    </td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => openEdit(c)}
@@ -187,7 +231,7 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
               <>
                 <tr className="bg-gray-100">
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
                     Co-Pilots ({coPilots.length})
@@ -209,6 +253,18 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4">{c.licenseNumber}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => toggleStatus(c.id)}
+                        className={`px-3 py-1 rounded-full text-xs ${
+                          c.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {c.isActive ? "Active" : "Inactive"}
+                      </button>
+                    </td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => openEdit(c)}
@@ -233,7 +289,7 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
               <>
                 <tr className="bg-gray-100">
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-6 py-2 text-sm font-semibold text-gray-700"
                   >
                     Flight Attendants ({attendants.length})
@@ -255,6 +311,18 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4">{c.licenseNumber}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => toggleStatus(c.id)}
+                        className={`px-3 py-1 rounded-full text-xs ${
+                          c.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {c.isActive ? "Active" : "Inactive"}
+                      </button>
+                    </td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => openEdit(c)}

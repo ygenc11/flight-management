@@ -14,6 +14,7 @@ namespace FlightManagement.DTO
         public string LastName { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty; // e.g., Pilot, Co-Pilot, Flight Attendant
         public string LicenseNumber { get; set; } = string.Empty; // Applicable for pilots
+        public bool IsActive { get; set; } = true;
 
     }
 }

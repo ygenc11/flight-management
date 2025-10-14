@@ -13,10 +13,11 @@ namespace FlightManagement.Services
 
         Task<(bool isValid, string errorMessage)> ValidateAircraftUpdateAsync(int aircraftId, string tailNumber, int seatsCapacity);
 
+        Task<IEnumerable<Aircraft>> GetAllAircraftAsync();
         Task<IEnumerable<Aircraft>> GetAllActiveAircraftAsync();
         Task<Aircraft?> GetAircraftByIdAsync(int id);
         Task<Aircraft> CreateAircraftAsync(string model, string tailNumber, int seatsCapacity);
-        Task<bool> UpdateAircraftAsync(int id, string model, string tailNumber, int seatsCapacity);
+        Task<bool> UpdateAircraftAsync(int id, string model, string tailNumber, int seatsCapacity, bool isActive = true);
 
         Task<bool> SoftDeleteAircraftAsync(int id);
         Task<(bool canDelete, string errorMessage)> CanDeleteAircraftAsync(int id);

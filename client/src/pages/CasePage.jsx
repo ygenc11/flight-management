@@ -91,6 +91,8 @@ const CasePage = () => {
     return {
       id: crewDto.id,
       name: `${crewDto.firstName} ${crewDto.lastName}`,
+      firstName: crewDto.firstName,
+      lastName: crewDto.lastName,
       role:
         crewDto.role === "pilot"
           ? "Captain"
@@ -100,6 +102,7 @@ const CasePage = () => {
           ? "Flight Attendant"
           : crewDto.role,
       license: crewDto.licenseNumber,
+      isActive: crewDto.isActive ?? true, // Default to true if not provided
     };
   };
 
@@ -255,6 +258,74 @@ const CasePage = () => {
       setError("Failed to refresh data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Toggle aircraft availability
+  const handleToggleAircraftAvailability = async (aircraftId, newIsActive) => {
+    try {
+      const aircraft = aircrafts.find((a) => a.id === aircraftId);
+      if (!aircraft) return;
+
+      // Optimistic update
+      setAircrafts((prev) =>
+        prev.map((a) =>
+          a.id === aircraftId ? { ...a, isActive: newIsActive } : a
+        )
+      );
+
+      // Backend update
+      await apiService.updateAircraft(aircraftId, {
+        ...aircraft,
+        isActive: newIsActive,
+      });
+    } catch (error) {
+      console.error("Failed to toggle aircraft availability:", error);
+      // Rollback on error
+      setAircrafts((prev) =>
+        prev.map((a) =>
+          a.id === aircraftId ? { ...a, isActive: !newIsActive } : a
+        )
+      );
+      alert("Failed to update aircraft availability");
+    }
+  };
+
+  // Toggle crew availability
+  const handleToggleCrewAvailability = async (crewId, newIsActive) => {
+    try {
+      const crewMember = crews.find((c) => c.id === crewId);
+      if (!crewMember) return;
+
+      // Optimistic update
+      setCrews((prev) =>
+        prev.map((c) => (c.id === crewId ? { ...c, isActive: newIsActive } : c))
+      );
+
+      // Convert display role to backend format
+      let backendRole = crewMember.role;
+      if (crewMember.role === "Captain") backendRole = "Pilot";
+      else if (crewMember.role === "First Officer") backendRole = "CoPilot";
+      else if (crewMember.role === "Flight Attendant")
+        backendRole = "FlightAttendant";
+
+      // Backend update
+      await apiService.updateCrew(crewId, {
+        firstName: crewMember.firstName,
+        lastName: crewMember.lastName,
+        role: backendRole,
+        licenseNumber: crewMember.license || "",
+        isActive: newIsActive,
+      });
+    } catch (error) {
+      console.error("Failed to toggle crew availability:", error);
+      // Rollback on error
+      setCrews((prev) =>
+        prev.map((c) =>
+          c.id === crewId ? { ...c, isActive: !newIsActive } : c
+        )
+      );
+      alert("Failed to update crew availability");
     }
   };
 
@@ -480,6 +551,7 @@ const CasePage = () => {
                     selectedDate={selectedDate}
                     onFlightDrop={handleFlightDrop}
                     scrollContainerRef={scrollContainerRef}
+                    onToggleAvailability={handleToggleAircraftAvailability}
                   />
                 ))}
               </div>
@@ -514,6 +586,7 @@ const CasePage = () => {
                       flights={filteredFlights}
                       section="captain"
                       selectedDate={selectedDate}
+                      onToggleAvailability={handleToggleCrewAvailability}
                     />
                   ))}
                 </>
@@ -537,6 +610,7 @@ const CasePage = () => {
                       flights={filteredFlights}
                       section="firstofficer"
                       selectedDate={selectedDate}
+                      onToggleAvailability={handleToggleCrewAvailability}
                     />
                   ))}
                 </>

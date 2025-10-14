@@ -108,6 +108,8 @@ const apiService = {
         model: aircraftData.model,
         tailNumber: aircraftData.registration || aircraftData.tailNumber,
         seatsCapacity: aircraftData.capacity || aircraftData.seatsCapacity,
+        isActive:
+          aircraftData.isActive !== undefined ? aircraftData.isActive : true,
       };
 
       const response = await fetch(`${API_BASE_URL}/aircraft/${id}`, {

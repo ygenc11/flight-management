@@ -34,7 +34,8 @@ namespace FlightManagement.Controllers
                 FirstName = crew.FirstName,
                 LastName = crew.LastName,
                 Role = crew.Role,
-                LicenseNumber = crew.LicenseNumber
+                LicenseNumber = crew.LicenseNumber,
+                IsActive = crew.IsActive
             }).ToList();
 
             return Ok(crewDtoList);
@@ -56,7 +57,8 @@ namespace FlightManagement.Controllers
                 FirstName = crewMember.FirstName,
                 LastName = crewMember.LastName,
                 Role = crewMember.Role,
-                LicenseNumber = crewMember.LicenseNumber
+                LicenseNumber = crewMember.LicenseNumber,
+                IsActive = crewMember.IsActive
             };
             _logger.LogInformation("Crew member fetched: {Id} {FirstName} {LastName}", crewDto.Id, crewDto.FirstName, crewDto.LastName);
             return Ok(crewDto);
@@ -93,7 +95,8 @@ namespace FlightManagement.Controllers
                 FirstName = crewMember.FirstName,
                 LastName = crewMember.LastName,
                 Role = crewMember.Role,
-                LicenseNumber = crewMember.LicenseNumber
+                LicenseNumber = crewMember.LicenseNumber,
+                IsActive = crewMember.IsActive
             };
 
             _logger.LogInformation("Crew member created successfully: {Id} - {FirstName} {LastName} ({Role})", crewMember.Id, crewMember.FirstName, crewMember.LastName, crewMember.Role);
@@ -124,7 +127,8 @@ namespace FlightManagement.Controllers
                 crewMemberDto.FirstName,
                 crewMemberDto.LastName,
                 crewMemberDto.Role,
-                crewMemberDto.LicenseNumber
+                crewMemberDto.LicenseNumber,
+                crewMemberDto.IsActive
             );
 
             if (!success)

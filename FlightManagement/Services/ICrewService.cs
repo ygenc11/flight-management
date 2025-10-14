@@ -29,7 +29,7 @@ namespace FlightManagement.Services
         /// <summary>
         /// Updates an existing crew member
         /// </summary>
-        Task<bool> UpdateCrewMemberAsync(int id, string firstName, string lastName, string role, string licenseNumber);
+        Task<bool> UpdateCrewMemberAsync(int id, string firstName, string lastName, string role, string licenseNumber, bool isActive = true);
 
         /// <summary>
         /// Soft deletes a crew member

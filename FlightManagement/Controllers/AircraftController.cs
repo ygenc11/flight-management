@@ -28,14 +28,15 @@ namespace FlightManagement.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AircraftDTO>>> GetAllAircraft()
         {
-            var aircraftList = await _aircraftService.GetAllActiveAircraftAsync();
+            var aircraftList = await _aircraftService.GetAllAircraftAsync();
 
             var dtoList = aircraftList.Select(aircraft => new AircraftDTO
             {
                 Id = aircraft.Id,
                 Model = aircraft.Model,
                 TailNumber = aircraft.TailNumber,
-                SeatsCapacity = aircraft.SeatsCapacity
+                SeatsCapacity = aircraft.SeatsCapacity,
+                IsActive = aircraft.IsActive
             }).ToList();
 
             return Ok(dtoList);
@@ -56,7 +57,8 @@ namespace FlightManagement.Controllers
                 Id = aircraft.Id,
                 Model = aircraft.Model,
                 TailNumber = aircraft.TailNumber,
-                SeatsCapacity = aircraft.SeatsCapacity
+                SeatsCapacity = aircraft.SeatsCapacity,
+                IsActive = aircraft.IsActive
             };
             _logger.LogInformation("Aircraft fetched: {Id} {Model}", dto.Id, dto.Model);
             return Ok(dto);
@@ -88,7 +90,8 @@ namespace FlightManagement.Controllers
                 Id = aircraft.Id,
                 Model = aircraft.Model,
                 TailNumber = aircraft.TailNumber,
-                SeatsCapacity = aircraft.SeatsCapacity
+                SeatsCapacity = aircraft.SeatsCapacity,
+                IsActive = aircraft.IsActive
             };
 
             _logger.LogInformation("Aircraft created successfully: {Id} - {Model} ({TailNumber})", aircraft.Id, aircraft.Model, aircraft.TailNumber);
@@ -116,7 +119,8 @@ namespace FlightManagement.Controllers
                 id,
                 aircraftDto.Model,
                 aircraftDto.TailNumber,
-                aircraftDto.SeatsCapacity);
+                aircraftDto.SeatsCapacity,
+                aircraftDto.IsActive);
 
             if (!updated)
             {
@@ -124,7 +128,8 @@ namespace FlightManagement.Controllers
                 return NotFound();
             }
 
-            _logger.LogInformation("Aircraft updated successfully: {Id} - {Model} ({TailNumber})", id, aircraftDto.Model, aircraftDto.TailNumber);
+            _logger.LogInformation("Aircraft updated successfully: {Id} - {Model} ({TailNumber}) - Active: {IsActive}",
+                id, aircraftDto.Model, aircraftDto.TailNumber, aircraftDto.IsActive);
             return NoContent();
         }
 

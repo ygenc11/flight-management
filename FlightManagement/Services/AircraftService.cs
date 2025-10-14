@@ -97,6 +97,13 @@ namespace FlightManagement.Services
             return (true, string.Empty);
         }
 
+        // Gets all aircraft (including inactive)
+        public async Task<IEnumerable<Aircraft>> GetAllAircraftAsync()
+        {
+            _logger.LogDebug("Fetching all aircraft");
+            return await _aircraftRepository.GetAllAsync();
+        }
+
         // Gets all active aircraft
         public async Task<IEnumerable<Aircraft>> GetAllActiveAircraftAsync()
         {
@@ -131,7 +138,7 @@ namespace FlightManagement.Services
         }
 
         // Updates an existing aircraft
-        public async Task<bool> UpdateAircraftAsync(int id, string model, string tailNumber, int seatsCapacity)
+        public async Task<bool> UpdateAircraftAsync(int id, string model, string tailNumber, int seatsCapacity, bool isActive = true)
         {
             var aircraft = await _aircraftRepository.GetByIdAsync(id);
             if (aircraft == null)
@@ -143,11 +150,12 @@ namespace FlightManagement.Services
             aircraft.Model = model;
             aircraft.TailNumber = tailNumber;
             aircraft.SeatsCapacity = seatsCapacity;
+            aircraft.IsActive = isActive;
 
             await _aircraftRepository.UpdateAsync(aircraft);
 
-            _logger.LogInformation("Aircraft updated: {Id} {Model} {TailNumber}",
-                aircraft.Id, aircraft.Model, aircraft.TailNumber);
+            _logger.LogInformation("Aircraft updated: {Id} {Model} {TailNumber} - Active: {IsActive}",
+                aircraft.Id, aircraft.Model, aircraft.TailNumber, aircraft.IsActive);
 
             return true;
         }
