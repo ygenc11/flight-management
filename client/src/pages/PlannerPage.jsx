@@ -7,11 +7,8 @@ import FlightsManagement from "../components/planner/FlightsManagement";
 import apiService from "../services/apiService";
 
 export default function PlannerPage() {
-  // Load active tab from localStorage or default to "airports"
-  const [activeTab, setActiveTab] = useState(() => {
-    const savedTab = localStorage.getItem("plannerActiveTab");
-    return savedTab || "airports";
-  });
+  // Start with "airports", will be updated in useEffect if needed
+  const [activeTab, setActiveTab] = useState("airports");
   const [currentUTCTime, setCurrentUTCTime] = useState(
     new Date().toUTCString()
   );
@@ -49,6 +46,22 @@ export default function PlannerPage() {
   // Load data on component mount
   useEffect(() => {
     fetchInitialData();
+
+    // Check if this is a page reload/refresh
+    // If user refreshes, restore their tab from localStorage
+    // If they navigated here (from navbar), keep default "airports"
+    const wasPageReloaded = sessionStorage.getItem("plannerWasMounted");
+
+    if (wasPageReloaded === "true") {
+      // This is a page refresh, restore from localStorage
+      const savedTab = localStorage.getItem("plannerActiveTab");
+      if (savedTab) {
+        setActiveTab(savedTab);
+      }
+    }
+
+    // Mark that component is now mounted
+    sessionStorage.setItem("plannerWasMounted", "true");
   }, []);
 
   // Save active tab to localStorage whenever it changes
@@ -63,6 +76,15 @@ export default function PlannerPage() {
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Track when component unmounts (navigating away from planner)
+  useEffect(() => {
+    return () => {
+      // When unmounting, clear the "was mounted" flag
+      // This ensures next mount will use default "airports" tab
+      sessionStorage.removeItem("plannerWasMounted");
+    };
   }, []);
 
   if (loading) {

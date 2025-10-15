@@ -1,0 +1,634 @@
+// src/pages/CasePage.jsx
+import React, { useState, useEffect, useRef } from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import TimeGrid from "../components/case/TimeGrid";
+import AircraftRow from "../components/case/AircraftRow";
+import CrewRow from "../components/case/CrewRow";
+import { CurrentTimeLabel } from "../components/case/CurrentTimeLine";
+import apiService from "../services/apiService";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Clock,
+  Plane,
+  Users as UsersIcon,
+  RefreshCw,
+} from "lucide-react";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault("UTC");
+
+const CasePage = () => {
+  const [showAircraft, setShowAircraft] = useState(true);
+  const [showCrew, setShowCrew] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(dayjs.utc());
+  const [currentUTCTime, setCurrentUTCTime] = useState(dayjs.utc());
+  const scrollContainerRef = useRef(null);
+
+  // Backend data states
+  const [aircrafts, setAircrafts] = useState([]);
+  const [crews, setCrews] = useState([]);
+  const [flights, setFlights] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const currentDate = selectedDate;
+
+  // Transform backend DTO to frontend format
+  const transformFlightData = (flightDto) => {
+    return {
+      id: flightDto.id,
+      flightNumber: flightDto.flightNumber,
+      departure: {
+        airport: flightDto.departureAirport?.iataCode || "",
+        name: flightDto.departureAirport?.name || "",
+        time: flightDto.departureTime,
+        airportId: flightDto.departureAirportId,
+      },
+      arrival: {
+        airport: flightDto.arrivalAirport?.iataCode || "",
+        name: flightDto.arrivalAirport?.name || "",
+        time: flightDto.arrivalTime,
+        airportId: flightDto.arrivalAirportId,
+      },
+      aircraftId: flightDto.aircraftId,
+      departureAirportId: flightDto.departureAirportId,
+      arrivalAirportId: flightDto.arrivalAirportId,
+      captain: flightDto.crewMembers?.find(
+        (c) =>
+          c.role?.toLowerCase() === "pilot" ||
+          c.role?.toLowerCase() === "captain"
+      )?.id,
+      firstOfficer: flightDto.crewMembers?.find(
+        (c) =>
+          c.role?.toLowerCase() === "copilot" ||
+          c.role?.toLowerCase() === "first officer"
+      )?.id,
+      cabinCrew:
+        flightDto.crewMembers
+          ?.filter(
+            (c) =>
+              c.role?.toLowerCase() === "flightattendant" ||
+              c.role?.toLowerCase() === "flight attendant"
+          )
+          .map((c) => c.id) || [],
+      crewMembers: flightDto.crewMembers || [], // Crew bilgilerinin tamamını sakla
+      status: flightDto.status || "Planned",
+      duration: dayjs(flightDto.arrivalTime).diff(
+        dayjs(flightDto.departureTime),
+        "minute"
+      ),
+      passengers: Math.floor(Math.random() * 100) + 150, // Backend'de bu alan yok, rastgele değer
+    };
+  };
+
+  // Transform crew data
+  const transformCrewData = (crewDto) => {
+    return {
+      id: crewDto.id,
+      name: `${crewDto.firstName} ${crewDto.lastName}`,
+      firstName: crewDto.firstName,
+      lastName: crewDto.lastName,
+      role:
+        crewDto.role === "pilot"
+          ? "Captain"
+          : crewDto.role === "copilot"
+          ? "First Officer"
+          : crewDto.role === "flightattendant"
+          ? "Flight Attendant"
+          : crewDto.role,
+      license: crewDto.licenseNumber,
+      isActive: crewDto.isActive ?? true, // Default to true if not provided
+    };
+  };
+
+  // Fetch data from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [aircraftData, crewData, flightData] = await Promise.all([
+          apiService.getAircraft(),
+          apiService.getCrew(),
+          apiService.getFlights(),
+        ]);
+
+        // Transform data to match frontend expectations
+        const transformedCrews = crewData.map(transformCrewData);
+        const transformedFlights = flightData.map(transformFlightData);
+
+        setAircrafts(aircraftData); // Already transformed in apiService
+        setCrews(transformedCrews);
+        setFlights(transformedFlights);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load data from server");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Update UTC time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentUTCTime(dayjs.utc());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-update flight status to "Arrived" if arrival time has passed
+  useEffect(() => {
+    const checkAndUpdateFlightStatus = async () => {
+      const now = dayjs.utc();
+      const flightsToUpdate = flights.filter((flight) => {
+        const arrivalTime = dayjs.utc(flight.arrival.time);
+        // Update if: arrival time passed AND status is not Cancelled or already Arrived
+        return (
+          arrivalTime.isBefore(now) &&
+          flight.status !== "Cancelled" &&
+          flight.status !== "Arrived"
+        );
+      });
+
+      // Update each flight that needs status change
+      for (const flight of flightsToUpdate) {
+        try {
+          const updateData = {
+            flightNumber: flight.flightNumber,
+            aircraftId: flight.aircraftId,
+            departureTime: flight.departure.time,
+            arrivalTime: flight.arrival.time,
+            departureAirportId: flight.departure.airportId,
+            arrivalAirportId: flight.arrival.airportId,
+            crewMemberIds: flight.crewMembers.map((c) => c.id),
+            status: "Arrived", // Change status to Arrived
+          };
+
+          await apiService.updateFlight(flight.id, updateData);
+
+          // Update local state
+          setFlights((prevFlights) =>
+            prevFlights.map((f) =>
+              f.id === flight.id ? { ...f, status: "Arrived" } : f
+            )
+          );
+        } catch (error) {
+          console.error(
+            `Failed to update flight ${flight.flightNumber}:`,
+            error
+          );
+        }
+      }
+    };
+
+    // Check every minute
+    const statusTimer = setInterval(checkAndUpdateFlightStatus, 60000);
+    // Also check immediately on mount
+    checkAndUpdateFlightStatus();
+
+    return () => clearInterval(statusTimer);
+  }, [flights]);
+
+  // Filter flights by selected date
+  // Show flight if it departs, arrives, or is in progress on the selected date
+  const filteredFlights = flights.filter((flight) => {
+    const selectedDayStart = selectedDate.startOf("day");
+    const selectedDayEnd = selectedDate.endOf("day");
+    const departureTime = dayjs.utc(flight.departure.time);
+    const arrivalTime = dayjs.utc(flight.arrival.time);
+
+    // Show flight if:
+    // 1. It departs on this day, OR
+    // 2. It arrives on this day, OR
+    // 3. It's in progress during this day (departs before and arrives after)
+    return (
+      (departureTime.isAfter(selectedDayStart) &&
+        departureTime.isBefore(selectedDayEnd)) ||
+      (arrivalTime.isAfter(selectedDayStart) &&
+        arrivalTime.isBefore(selectedDayEnd)) ||
+      (departureTime.isBefore(selectedDayStart) &&
+        arrivalTime.isAfter(selectedDayEnd))
+    );
+  });
+
+  // Filter crews by role
+  const captains = crews.filter(
+    (c) =>
+      c.role?.toLowerCase() === "captain" || c.role?.toLowerCase() === "pilot"
+  );
+  const firstOfficers = crews.filter(
+    (c) =>
+      c.role?.toLowerCase() === "first officer" ||
+      c.role?.toLowerCase() === "copilot"
+  );
+  const flightAttendants = crews.filter(
+    (c) =>
+      c.role?.toLowerCase() === "flight attendant" ||
+      c.role?.toLowerCase() === "flightattendant"
+  );
+
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [aircraftData, crewData, flightData] = await Promise.all([
+        apiService.getAircraft(),
+        apiService.getCrew(),
+        apiService.getFlights(),
+      ]);
+
+      const transformedCrews = crewData.map(transformCrewData);
+      const transformedFlights = flightData.map(transformFlightData);
+
+      setAircrafts(aircraftData);
+      setCrews(transformedCrews);
+      setFlights(transformedFlights);
+    } catch (err) {
+      console.error("Error refreshing data:", err);
+      setError("Failed to refresh data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Toggle aircraft availability
+  const handleToggleAircraftAvailability = async (aircraftId, newIsActive) => {
+    try {
+      const aircraft = aircrafts.find((a) => a.id === aircraftId);
+      if (!aircraft) return;
+
+      // Optimistic update
+      setAircrafts((prev) =>
+        prev.map((a) =>
+          a.id === aircraftId ? { ...a, isActive: newIsActive } : a
+        )
+      );
+
+      // Backend update
+      await apiService.updateAircraft(aircraftId, {
+        ...aircraft,
+        isActive: newIsActive,
+      });
+    } catch (error) {
+      console.error("Failed to toggle aircraft availability:", error);
+      // Rollback on error
+      setAircrafts((prev) =>
+        prev.map((a) =>
+          a.id === aircraftId ? { ...a, isActive: !newIsActive } : a
+        )
+      );
+      alert("Failed to update aircraft availability");
+    }
+  };
+
+  // Toggle crew availability
+  const handleToggleCrewAvailability = async (crewId, newIsActive) => {
+    try {
+      const crewMember = crews.find((c) => c.id === crewId);
+      if (!crewMember) return;
+
+      // Optimistic update
+      setCrews((prev) =>
+        prev.map((c) => (c.id === crewId ? { ...c, isActive: newIsActive } : c))
+      );
+
+      // Convert display role to backend format
+      let backendRole = crewMember.role;
+      if (crewMember.role === "Captain") backendRole = "Pilot";
+      else if (crewMember.role === "First Officer") backendRole = "CoPilot";
+      else if (crewMember.role === "Flight Attendant")
+        backendRole = "FlightAttendant";
+
+      // Backend update
+      await apiService.updateCrew(crewId, {
+        firstName: crewMember.firstName,
+        lastName: crewMember.lastName,
+        role: backendRole,
+        licenseNumber: crewMember.license || "",
+        isActive: newIsActive,
+      });
+    } catch (error) {
+      console.error("Failed to toggle crew availability:", error);
+      // Rollback on error
+      setCrews((prev) =>
+        prev.map((c) =>
+          c.id === crewId ? { ...c, isActive: !newIsActive } : c
+        )
+      );
+      alert("Failed to update crew availability");
+    }
+  };
+
+  // Handle flight drop - update flight time and aircraft
+  const handleFlightDrop = async (
+    flightId,
+    newAircraftId,
+    newDepartureTime,
+    newArrivalTime
+  ) => {
+    try {
+      // Check for collisions before updating
+      const flight = flights.find((f) => f.id === flightId);
+      if (!flight) return;
+
+      // Check if new time slot conflicts with existing flights
+      const hasConflict = flights.some((f) => {
+        if (f.id === flightId) return false; // Skip same flight
+        if (f.aircraftId !== newAircraftId) return false; // Different aircraft
+
+        const existingStart = dayjs.utc(f.departure.time);
+        const existingEnd = dayjs.utc(f.arrival.time);
+        const newStart = dayjs.utc(newDepartureTime);
+        const newEnd = dayjs.utc(newArrivalTime);
+
+        // Check if times overlap
+        return (
+          (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) ||
+          (existingStart.isBefore(newEnd) && existingEnd.isAfter(newStart))
+        );
+      });
+
+      if (hasConflict) {
+        alert(
+          "Time slot conflict! This aircraft is already scheduled for another flight at this time."
+        );
+        return;
+      }
+
+      // Optimistic update - update UI immediately
+      setFlights((prevFlights) =>
+        prevFlights.map((f) =>
+          f.id === flightId
+            ? {
+                ...f,
+                aircraftId: newAircraftId,
+                departure: { ...f.departure, time: newDepartureTime },
+                arrival: { ...f.arrival, time: newArrivalTime },
+              }
+            : f
+        )
+      );
+
+      // Prepare full flight data for backend (PUT requires all fields)
+      const crewMemberIds = [];
+      if (flight.captain) crewMemberIds.push(flight.captain);
+      if (flight.firstOfficer) crewMemberIds.push(flight.firstOfficer);
+      if (flight.cabinCrew && flight.cabinCrew.length > 0) {
+        crewMemberIds.push(...flight.cabinCrew);
+      }
+
+      const updateData = {
+        flightNumber: flight.flightNumber,
+        aircraftId: newAircraftId,
+        departureTime: newDepartureTime,
+        arrivalTime: newArrivalTime,
+        departureAirportId:
+          flight.departure.airportId || flight.departureAirportId,
+        arrivalAirportId: flight.arrival.airportId || flight.arrivalAirportId,
+        crewMemberIds: crewMemberIds,
+        status: flight.status,
+      };
+
+      await apiService.updateFlight(flightId, updateData);
+
+      // Optionally show success message
+      console.log(`Flight ${flight.flightNumber} updated successfully`);
+    } catch (err) {
+      console.error("Error updating flight:", err);
+      alert("Failed to update flight. Please try again.");
+
+      // Rollback on error - refresh data from backend
+      handleRefresh();
+    }
+  };
+
+  const handleExport = () => {
+    alert("Export functionality would be implemented here");
+  };
+
+  const handlePrevDay = () => {
+    setSelectedDate(selectedDate.subtract(1, "day"));
+  };
+
+  const handleNextDay = () => {
+    setSelectedDate(selectedDate.add(1, "day"));
+  };
+
+  const handleToday = () => {
+    setSelectedDate(dayjs.utc());
+  };
+
+  const isToday = () => {
+    return (
+      selectedDate.format("YYYY-MM-DD") === dayjs.utc().format("YYYY-MM-DD")
+    );
+  };
+
+  // Loading state
+  if (loading && aircrafts.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading flight data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+            <p className="text-red-600 font-medium mb-4">{error}</p>
+            <button
+              onClick={handleRefresh}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header - Professional FlightScheduler Style */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-gray-900">Flight Scheduler</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                {selectedDate.format("MMMM D, YYYY")}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 border-l border-gray-300 pl-4">
+              <Clock className="w-5 h-5 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                UTC: {currentUTCTime.format("HH:mm:ss")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="w-5 h-5 text-gray-600" />
+          </button>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handlePrevDay}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleToday}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                       transition-colors text-sm font-medium"
+            >
+              {isToday() ? "Today" : selectedDate.format("MMM D")}
+            </button>
+            <button
+              onClick={handleNextDay}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        <div ref={scrollContainerRef} className="h-full overflow-auto">
+          <div className="inline-block min-w-full">
+            {/* Aircraft Section */}
+            <div className="bg-white">
+              {/* Time Grid - En üstte */}
+              <div className="sticky top-0 z-30">
+                <TimeGrid selectedDate={selectedDate} />
+              </div>
+
+              {/* Aircraft Header - Time Grid'in altında */}
+              <div className="flex bg-gray-100 border-b-2 border-gray-300 sticky top-[52px] z-40">
+                <div className="w-48 px-4 py-3 font-bold text-sm text-gray-700 sticky left-0 bg-gray-100 border-r border-gray-300 z-50 flex items-center gap-2">
+                  <Plane className="w-5 h-5 text-blue-600" />
+                  AIRCRAFT ({aircrafts.length})
+                </div>
+                <div className="flex-1 relative">
+                  <CurrentTimeLabel selectedDate={selectedDate} />
+                </div>
+              </div>
+
+              <div className="relative">
+                {aircrafts.map((aircraft) => (
+                  <AircraftRow
+                    key={aircraft.id}
+                    aircraft={aircraft}
+                    flights={filteredFlights}
+                    selectedDate={selectedDate}
+                    onFlightDrop={handleFlightDrop}
+                    scrollContainerRef={scrollContainerRef}
+                    onToggleAvailability={handleToggleAircraftAvailability}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Crew Section */}
+            <div className="bg-white mt-4">
+              {/* Crew Header - Sticky below Aircraft header */}
+              <div className="flex bg-gray-100 border-b-2 border-gray-300 sticky top-[96px] z-40">
+                <div className="w-48 px-4 py-3 font-bold text-sm text-gray-700 sticky left-0 bg-gray-100 border-r border-gray-300 z-50 flex items-center gap-2">
+                  <UsersIcon className="w-5 h-5 text-green-600" />
+                  CREW ({crews.length})
+                </div>
+                <div className="flex-1" />
+              </div>
+
+              {/* Captains */}
+              {captains.length > 0 && (
+                <>
+                  <div className="flex bg-gray-50 border-b border-gray-200">
+                    <div className="w-48 px-6 py-2 sticky left-0 bg-gray-50 z-20 border-r border-gray-200">
+                      <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                        Captains ({captains.length})
+                      </h3>
+                    </div>
+                    <div className="flex-1" />
+                  </div>
+                  {captains.map((crew) => (
+                    <CrewRow
+                      key={crew.id}
+                      crew={crew}
+                      flights={filteredFlights}
+                      section="captain"
+                      selectedDate={selectedDate}
+                      onToggleAvailability={handleToggleCrewAvailability}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* First Officers */}
+              {firstOfficers.length > 0 && (
+                <>
+                  <div className="flex bg-gray-50 border-b border-gray-200 mt-2">
+                    <div className="w-48 px-6 py-2 sticky left-0 bg-gray-50 z-20 border-r border-gray-200">
+                      <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                        First Officers ({firstOfficers.length})
+                      </h3>
+                    </div>
+                    <div className="flex-1" />
+                  </div>
+                  {firstOfficers.map((crew) => (
+                    <CrewRow
+                      key={crew.id}
+                      crew={crew}
+                      flights={filteredFlights}
+                      section="firstofficer"
+                      selectedDate={selectedDate}
+                      onToggleAvailability={handleToggleCrewAvailability}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Info */}
+      <div className="bg-white border-t border-gray-200 px-6 py-3 text-center">
+        <p className="text-xs text-gray-500">
+          All times are displayed in UTC timezone • Hover over flight blocks for
+          detailed information
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default CasePage;

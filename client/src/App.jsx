@@ -5,6 +5,7 @@ import FlightScheduler from "./pages/FlightScheduler";
 ("./pages/FlightScheduler");
 import TestScheduler from "./pages/TestScheduler";
 import CasePage from "./pages/CasePage";
+import CasePageCopy from "./pages/CasePage copy";
 import {
   BrowserRouter as Router,
   Routes,
@@ -28,6 +29,7 @@ function App() {
           <Route path="scheduler" element={<FlightScheduler />} />
           <Route path="test-scheduler" element={<TestScheduler />} />
           <Route path="case" element={<CasePage />} />
+          <Route path="case-copy" element={<CasePageCopy />} />
         </Route>
       </Routes>
     </Router>

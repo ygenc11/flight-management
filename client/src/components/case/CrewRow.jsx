@@ -59,13 +59,13 @@ const CrewRow = ({
   };
 
   return (
-    <div
-      className={`flex border-b border-gray-200 hover:bg-gray-50 transition-colors relative ${
-        !crew.isActive ? "bg-gray-100 opacity-60" : ""
-      }`}
-    >
+    <div className="flex border-b border-gray-200 hover:bg-gray-50 transition-colors relative">
       {/* Crew Info */}
-      <div className="w-48 flex-shrink-0 sticky left-0 bg-white border-r border-gray-300 px-4 py-4 flex items-center justify-between z-50">
+      <div
+        className={`w-48 flex-shrink-0 sticky left-0 border-r border-gray-300 px-4 py-4 flex items-center justify-between z-50 ${
+          !crew.isActive ? "bg-gray-100 opacity-75" : "bg-white"
+        }`}
+      >
         <div className="flex items-center gap-3 flex-1">
           <Users
             className={`w-5 h-5 ${

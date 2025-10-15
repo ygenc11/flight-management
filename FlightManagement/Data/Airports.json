@@ -1,0 +1,282 @@
+[
+  {
+    "IATA": "ATL",
+    "Name": "Hartsfield-Jackson Atlanta International",
+    "City": "Atlanta",
+    "Country": "USA",
+    "Latitude": 33.6407,
+    "Longitude": -84.4277
+  },
+  {
+    "IATA": "DXB",
+    "Name": "Dubai International",
+    "City": "Dubai",
+    "Country": "UAE",
+    "Latitude": 25.2532,
+    "Longitude": 55.3657
+  },
+  {
+    "IATA": "DFW",
+    "Name": "Dallas/Fort Worth International",
+    "City": "Dallas",
+    "Country": "USA",
+    "Latitude": 32.8998,
+    "Longitude": -97.0403
+  },
+  {
+    "IATA": "LHR",
+    "Name": "London Heathrow",
+    "City": "London",
+    "Country": "UK",
+    "Latitude": 51.47,
+    "Longitude": -0.4543
+  },
+  {
+    "IATA": "HND",
+    "Name": "Tokyo Haneda",
+    "City": "Tokyo",
+    "Country": "Japan",
+    "Latitude": 35.5494,
+    "Longitude": 139.7798
+  },
+  {
+    "IATA": "DEN",
+    "Name": "Denver International",
+    "City": "Denver",
+    "Country": "USA",
+    "Latitude": 39.8561,
+    "Longitude": -104.6737
+  },
+  {
+    "IATA": "IST",
+    "Name": "Istanbul Airport",
+    "City": "Istanbul",
+    "Country": "Turkey",
+    "Latitude": 41.2753,
+    "Longitude": 28.7519
+  },
+  {
+    "IATA": "LAX",
+    "Name": "Los Angeles International",
+    "City": "Los Angeles",
+    "Country": "USA",
+    "Latitude": 33.9416,
+    "Longitude": -118.4085
+  },
+  {
+    "IATA": "ORD",
+    "Name": "O'Hare International",
+    "City": "Chicago",
+    "Country": "USA",
+    "Latitude": 41.9742,
+    "Longitude": -87.9073
+  },
+  {
+    "IATA": "CDG",
+    "Name": "Charles de Gaulle",
+    "City": "Paris",
+    "Country": "France",
+    "Latitude": 49.0097,
+    "Longitude": 2.5479
+  },
+  {
+    "IATA": "CAN",
+    "Name": "Guangzhou Baiyun International",
+    "City": "Guangzhou",
+    "Country": "China",
+    "Latitude": 23.3924,
+    "Longitude": 113.2988
+  },
+  {
+    "IATA": "JFK",
+    "Name": "John F. Kennedy International",
+    "City": "New York",
+    "Country": "USA",
+    "Latitude": 40.6413,
+    "Longitude": -73.7781
+  },
+  {
+    "IATA": "AMS",
+    "Name": "Amsterdam Schiphol",
+    "City": "Amsterdam",
+    "Country": "Netherlands",
+    "Latitude": 52.3105,
+    "Longitude": 4.7683
+  },
+  {
+    "IATA": "MAD",
+    "Name": "Adolfo Suárez Madrid–Barajas",
+    "City": "Madrid",
+    "Country": "Spain",
+    "Latitude": 40.4983,
+    "Longitude": -3.5676
+  },
+  {
+    "IATA": "FRA",
+    "Name": "Frankfurt Airport",
+    "City": "Frankfurt",
+    "Country": "Germany",
+    "Latitude": 50.0379,
+    "Longitude": 8.5622
+  },
+  {
+    "IATA": "SIN",
+    "Name": "Singapore Changi",
+    "City": "Singapore",
+    "Country": "Singapore",
+    "Latitude": 1.3644,
+    "Longitude": 103.9915
+  },
+  {
+    "IATA": "ICN",
+    "Name": "Incheon International",
+    "City": "Seoul",
+    "Country": "South Korea",
+    "Latitude": 37.4602,
+    "Longitude": 126.4407
+  },
+  {
+    "IATA": "PVG",
+    "Name": "Shanghai Pudong International",
+    "City": "Shanghai",
+    "Country": "China",
+    "Latitude": 31.1444,
+    "Longitude": 121.8053
+  },
+  {
+    "IATA": "BCN",
+    "Name": "Josep Tarradellas Barcelona-El Prat",
+    "City": "Barcelona",
+    "Country": "Spain",
+    "Latitude": 41.2974,
+    "Longitude": 2.0833
+  },
+  {
+    "IATA": "MCO",
+    "Name": "Orlando International",
+    "City": "Orlando",
+    "Country": "USA",
+    "Latitude": 28.4312,
+    "Longitude": -81.3081
+  },
+  {
+    "IATA": "DEL",
+    "Name": "Indira Gandhi International",
+    "City": "Delhi",
+    "Country": "India",
+    "Latitude": 28.5562,
+    "Longitude": 77.1
+  },
+  {
+    "IATA": "CLT",
+    "Name": "Charlotte Douglas International",
+    "City": "Charlotte",
+    "Country": "USA",
+    "Latitude": 35.214,
+    "Longitude": -80.9431
+  },
+  {
+    "IATA": "LAS",
+    "Name": "Harry Reid International",
+    "City": "Las Vegas",
+    "Country": "USA",
+    "Latitude": 36.084,
+    "Longitude": -115.1537
+  },
+  {
+    "IATA": "PHX",
+    "Name": "Phoenix Sky Harbor International",
+    "City": "Phoenix",
+    "Country": "USA",
+    "Latitude": 33.4343,
+    "Longitude": -112.0116
+  },
+  {
+    "IATA": "MIA",
+    "Name": "Miami International",
+    "City": "Miami",
+    "Country": "USA",
+    "Latitude": 25.7959,
+    "Longitude": -80.2871
+  },
+  {
+    "IATA": "SEA",
+    "Name": "Seattle-Tacoma International",
+    "City": "Seattle",
+    "Country": "USA",
+    "Latitude": 47.448,
+    "Longitude": -122.3088
+  },
+  {
+    "IATA": "PEK",
+    "Name": "Beijing Capital International",
+    "City": "Beijing",
+    "Country": "China",
+    "Latitude": 40.0799,
+    "Longitude": 116.6031
+  },
+  {
+    "IATA": "YYZ",
+    "Name": "Toronto Pearson International",
+    "City": "Toronto",
+    "Country": "Canada",
+    "Latitude": 43.6777,
+    "Longitude": -79.6248
+  },
+  {
+    "IATA": "DOH",
+    "Name": "Hamad International",
+    "City": "Doha",
+    "Country": "Qatar",
+    "Latitude": 25.2731,
+    "Longitude": 51.6139
+  },
+  {
+    "IATA": "SYD",
+    "Name": "Sydney Kingsford Smith",
+    "City": "Sydney",
+    "Country": "Australia",
+    "Latitude": -33.9461,
+    "Longitude": 151.1772
+  },
+  {
+    "IATA": "FCO",
+    "Name": "Leonardo da Vinci–Fiumicino",
+    "City": "Rome",
+    "Country": "Italy",
+    "Latitude": 41.8003,
+    "Longitude": 12.2388
+  },
+  {
+    "IATA": "SFO",
+    "Name": "San Francisco International",
+    "City": "San Francisco",
+    "Country": "USA",
+    "Latitude": 37.6213,
+    "Longitude": -122.379
+  },
+  {
+    "IATA": "MUC",
+    "Name": "Munich Airport",
+    "City": "Munich",
+    "Country": "Germany",
+    "Latitude": 48.3537,
+    "Longitude": 11.7861
+  },
+  {
+    "IATA": "BKK",
+    "Name": "Suvarnabhumi",
+    "City": "Bangkok",
+    "Country": "Thailand",
+    "Latitude": 13.69,
+    "Longitude": 100.7501
+  },
+  {
+    "IATA": "EWR",
+    "Name": "Newark Liberty International",
+    "City": "Newark",
+    "Country": "USA",
+    "Latitude": 40.6925,
+    "Longitude": -74.1687
+  }
+]

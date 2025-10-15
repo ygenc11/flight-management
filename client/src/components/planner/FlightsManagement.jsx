@@ -74,7 +74,10 @@ const FlightsManagement = ({
         departureAirportId: parseInt(formData.departureAirportId),
         arrivalAirportId: parseInt(formData.arrivalAirportId),
         departureTime: localInputToIso(formData.departureTime),
-        arrivalTime: localInputToIso(formData.arrivalTime),
+        // Only include arrivalTime if provided, otherwise backend will auto-calculate via forecasting
+        ...(formData.arrivalTime && {
+          arrivalTime: localInputToIso(formData.arrivalTime),
+        }),
         crewMemberIds: formData.crewMembers, // Backend expects crew IDs array
       };
 
@@ -415,15 +418,20 @@ const FlightsManagement = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Arrival Time</label>
+              <label className="block text-sm font-medium">
+                Arrival Time
+                <span className="text-gray-500 text-xs ml-1">
+                  (Optional - auto-calculated if empty)
+                </span>
+              </label>
               <input
-                required
                 type="datetime-local"
                 value={formData.arrivalTime}
                 onChange={(e) =>
                   setFormData({ ...formData, arrivalTime: e.target.value })
                 }
                 className="w-full px-3 py-2 border rounded-lg"
+                placeholder="Leave empty for auto-calculation"
               />
             </div>
           </div>

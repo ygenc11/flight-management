@@ -13,11 +13,22 @@ namespace FlightManagement.Controllers
     public class FlightController : ControllerBase
     {
         private readonly IFlightService _flightService;
+        private readonly IFlightForecastingService _forecastingService;
+        private readonly IAircraftService _aircraftService;
+        private readonly IAirportService _airportService;
         private readonly ILogger<FlightController> _logger;
 
-        public FlightController(IFlightService flightService, ILogger<FlightController> logger)
+        public FlightController(
+            IFlightService flightService,
+            IFlightForecastingService forecastingService,
+            IAircraftService aircraftService,
+            IAirportService airportService,
+            ILogger<FlightController> logger)
         {
             _flightService = flightService;
+            _forecastingService = forecastingService;
+            _aircraftService = aircraftService;
+            _airportService = airportService;
             _logger = logger;
         }
 
@@ -141,6 +152,39 @@ namespace FlightManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateFlight(CreateFlightDTO flightDto)
         {
+            // ✨ FORECASTING: Eğer arrivalTime yoksa veya boşsa, otomatik hesapla
+            if (flightDto.ArrivalTime == default || flightDto.ArrivalTime <= flightDto.DepartureTime)
+            {
+                _logger.LogInformation("Arrival time not provided, calculating via forecasting...");
+
+                // Gerekli bilgileri al
+                var aircraft = await _aircraftService.GetAircraftByIdAsync(flightDto.AircraftId);
+                var depAirport = await _airportService.GetAirportByIdAsync(flightDto.DepartureAirportId);
+                var arrAirport = await _airportService.GetAirportByIdAsync(flightDto.ArrivalAirportId);
+
+                if (aircraft != null && depAirport != null && arrAirport != null)
+                {
+                    var calculatedArrival = _forecastingService.CalculateArrivalTime(
+                        depAirport.IataCode,
+                        arrAirport.IataCode,
+                        aircraft.Model,
+                        flightDto.DepartureTime);
+
+                    if (calculatedArrival.HasValue)
+                    {
+                        flightDto.ArrivalTime = calculatedArrival.Value;
+                        _logger.LogInformation(
+                            $"Forecasted arrival time: {calculatedArrival.Value:yyyy-MM-dd HH:mm} " +
+                            $"for {depAirport.IataCode}->{arrAirport.IataCode}");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Forecasting failed, using default 2-hour flight duration");
+                        flightDto.ArrivalTime = flightDto.DepartureTime.AddHours(2);
+                    }
+                }
+            }
+
             // Validate all flight data using service
             var (isValid, errorMessage) = await _flightService.ValidateFlightCreationAsync(
                 flightDto.DepartureTime,
@@ -232,6 +276,39 @@ namespace FlightManagement.Controllers
         {
             try
             {
+                // ✨ FORECASTING: Eğer arrivalTime yoksa veya boşsa, otomatik hesapla
+                if (flightDto.ArrivalTime == default || flightDto.ArrivalTime <= flightDto.DepartureTime)
+                {
+                    _logger.LogInformation("Arrival time not provided for update, calculating via forecasting...");
+
+                    // Gerekli bilgileri al
+                    var aircraft = await _aircraftService.GetAircraftByIdAsync(flightDto.AircraftId);
+                    var depAirport = await _airportService.GetAirportByIdAsync(flightDto.DepartureAirportId);
+                    var arrAirport = await _airportService.GetAirportByIdAsync(flightDto.ArrivalAirportId);
+
+                    if (aircraft != null && depAirport != null && arrAirport != null)
+                    {
+                        var calculatedArrival = _forecastingService.CalculateArrivalTime(
+                            depAirport.IataCode,
+                            arrAirport.IataCode,
+                            aircraft.Model,
+                            flightDto.DepartureTime);
+
+                        if (calculatedArrival.HasValue)
+                        {
+                            flightDto.ArrivalTime = calculatedArrival.Value;
+                            _logger.LogInformation(
+                                $"Forecasted arrival time for update: {calculatedArrival.Value:yyyy-MM-dd HH:mm} " +
+                                $"for {depAirport.IataCode}->{arrAirport.IataCode}");
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Forecasting failed, using default 2-hour flight duration");
+                            flightDto.ArrivalTime = flightDto.DepartureTime.AddHours(2);
+                        }
+                    }
+                }
+
                 // Validate all flight data using service
                 var (isValid, errorMessage) = await _flightService.ValidateFlightUpdateAsync(
                     id,
