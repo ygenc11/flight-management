@@ -278,5 +278,421 @@
     "Country": "USA",
     "Latitude": 40.6925,
     "Longitude": -74.1687
+  },
+  {
+    "IATA": "SAW",
+    "Name": "Sabiha Gökçen International",
+    "City": "Istanbul",
+    "Country": "Turkey",
+    "Latitude": 40.8986,
+    "Longitude": 29.3092
+  },
+  {
+    "IATA": "NRT",
+    "Name": "Narita International",
+    "City": "Tokyo",
+    "Country": "Japan",
+    "Latitude": 35.7647,
+    "Longitude": 140.3864
+  },
+  {
+    "IATA": "LGW",
+    "Name": "London Gatwick",
+    "City": "London",
+    "Country": "UK",
+    "Latitude": 51.1537,
+    "Longitude": -0.1821
+  },
+  {
+    "IATA": "BOS",
+    "Name": "Logan International",
+    "City": "Boston",
+    "Country": "USA",
+    "Latitude": 42.3656,
+    "Longitude": -71.0096
+  },
+  {
+    "IATA": "IAH",
+    "Name": "George Bush Intercontinental",
+    "City": "Houston",
+    "Country": "USA",
+    "Latitude": 29.9902,
+    "Longitude": -95.3368
+  },
+  {
+    "IATA": "FLL",
+    "Name": "Fort Lauderdale-Hollywood International",
+    "City": "Fort Lauderdale",
+    "Country": "USA",
+    "Latitude": 26.0726,
+    "Longitude": -80.1527
+  },
+  {
+    "IATA": "BWI",
+    "Name": "Baltimore/Washington International",
+    "City": "Baltimore",
+    "Country": "USA",
+    "Latitude": 39.1774,
+    "Longitude": -76.6684
+  },
+  {
+    "IATA": "MSP",
+    "Name": "Minneapolis-Saint Paul International",
+    "City": "Minneapolis",
+    "Country": "USA",
+    "Latitude": 44.8848,
+    "Longitude": -93.2223
+  },
+  {
+    "IATA": "DTW",
+    "Name": "Detroit Metropolitan",
+    "City": "Detroit",
+    "Country": "USA",
+    "Latitude": 42.2124,
+    "Longitude": -83.3534
+  },
+  {
+    "IATA": "IAD",
+    "Name": "Washington Dulles International",
+    "City": "Washington D.C.",
+    "Country": "USA",
+    "Latitude": 38.9531,
+    "Longitude": -77.4565
+  },
+  {
+    "IATA": "YVR",
+    "Name": "Vancouver International",
+    "City": "Vancouver",
+    "Country": "Canada",
+    "Latitude": 49.196,
+    "Longitude": -123.1815
+  },
+  {
+    "IATA": "YUL",
+    "Name": "Montréal-Trudeau International",
+    "City": "Montreal",
+    "Country": "Canada",
+    "Latitude": 45.4706,
+    "Longitude": -73.7408
+  },
+  {
+    "IATA": "MEX",
+    "Name": "Mexico City International",
+    "City": "Mexico City",
+    "Country": "Mexico",
+    "Latitude": 19.4363,
+    "Longitude": -99.0721
+  },
+  {
+    "IATA": "CUN",
+    "Name": "Cancún International",
+    "City": "Cancún",
+    "Country": "Mexico",
+    "Latitude": 21.0365,
+    "Longitude": -86.8771
+  },
+  {
+    "IATA": "GRU",
+    "Name": "São Paulo/Guarulhos International",
+    "City": "São Paulo",
+    "Country": "Brazil",
+    "Latitude": -23.4356,
+    "Longitude": -46.4731
+  },
+  {
+    "IATA": "EZE",
+    "Name": "Ministro Pistarini International",
+    "City": "Buenos Aires",
+    "Country": "Argentina",
+    "Latitude": -34.8222,
+    "Longitude": -58.5358
+  },
+  {
+    "IATA": "BOG",
+    "Name": "El Dorado International",
+    "City": "Bogotá",
+    "Country": "Colombia",
+    "Latitude": 4.7016,
+    "Longitude": -74.1469
+  },
+  {
+    "IATA": "SCL",
+    "Name": "Arturo Merino Benítez International",
+    "City": "Santiago",
+    "Country": "Chile",
+    "Latitude": -33.393,
+    "Longitude": -70.7858
+  },
+  {
+    "IATA": "LIM",
+    "Name": "Jorge Chávez International",
+    "City": "Lima",
+    "Country": "Peru",
+    "Latitude": -12.0219,
+    "Longitude": -77.1143
+  },
+  {
+    "IATA": "ZRH",
+    "Name": "Zurich Airport",
+    "City": "Zurich",
+    "Country": "Switzerland",
+    "Latitude": 47.4582,
+    "Longitude": 8.5492
+  },
+  {
+    "IATA": "VIE",
+    "Name": "Vienna International",
+    "City": "Vienna",
+    "Country": "Austria",
+    "Latitude": 48.1103,
+    "Longitude": 16.5697
+  },
+  {
+    "IATA": "CPH",
+    "Name": "Copenhagen Airport",
+    "City": "Copenhagen",
+    "Country": "Denmark",
+    "Latitude": 55.6179,
+    "Longitude": 12.656
+  },
+  {
+    "IATA": "ARN",
+    "Name": "Stockholm Arlanda",
+    "City": "Stockholm",
+    "Country": "Sweden",
+    "Latitude": 59.6519,
+    "Longitude": 17.9186
+  },
+  {
+    "IATA": "OSL",
+    "Name": "Oslo Gardermoen",
+    "City": "Oslo",
+    "Country": "Norway",
+    "Latitude": 60.1976,
+    "Longitude": 11.1004
+  },
+  {
+    "IATA": "HEL",
+    "Name": "Helsinki-Vantaa",
+    "City": "Helsinki",
+    "Country": "Finland",
+    "Latitude": 60.3172,
+    "Longitude": 24.9633
+  },
+  {
+    "IATA": "DUB",
+    "Name": "Dublin Airport",
+    "City": "Dublin",
+    "Country": "Ireland",
+    "Latitude": 53.4264,
+    "Longitude": -6.2499
+  },
+  {
+    "IATA": "MAN",
+    "Name": "Manchester Airport",
+    "City": "Manchester",
+    "Country": "UK",
+    "Latitude": 53.3537,
+    "Longitude": -2.2749
+  },
+  {
+    "IATA": "BRU",
+    "Name": "Brussels Airport",
+    "City": "Brussels",
+    "Country": "Belgium",
+    "Latitude": 50.9014,
+    "Longitude": 4.4844
+  },
+  {
+    "IATA": "LIS",
+    "Name": "Lisbon Airport",
+    "City": "Lisbon",
+    "Country": "Portugal",
+    "Latitude": 38.7742,
+    "Longitude": -9.1342
+  },
+  {
+    "IATA": "ATH",
+    "Name": "Athens International",
+    "City": "Athens",
+    "Country": "Greece",
+    "Latitude": 37.9364,
+    "Longitude": 23.9444
+  },
+  {
+    "IATA": "WAW",
+    "Name": "Warsaw Chopin",
+    "City": "Warsaw",
+    "Country": "Poland",
+    "Latitude": 52.1657,
+    "Longitude": 20.9671
+  },
+  {
+    "IATA": "PRG",
+    "Name": "Václav Havel Airport Prague",
+    "City": "Prague",
+    "Country": "Czech Republic",
+    "Latitude": 50.1008,
+    "Longitude": 14.26
+  },
+  {
+    "IATA": "BUD",
+    "Name": "Budapest Ferenc Liszt International",
+    "City": "Budapest",
+    "Country": "Hungary",
+    "Latitude": 47.4399,
+    "Longitude": 19.255
+  },
+  {
+    "IATA": "HKG",
+    "Name": "Hong Kong International",
+    "City": "Hong Kong",
+    "Country": "China",
+    "Latitude": 22.308,
+    "Longitude": 113.9185
+  },
+  {
+    "IATA": "TPE",
+    "Name": "Taiwan Taoyuan International",
+    "City": "Taipei",
+    "Country": "Taiwan",
+    "Latitude": 25.0797,
+    "Longitude": 121.234
+  },
+  {
+    "IATA": "KUL",
+    "Name": "Kuala Lumpur International",
+    "City": "Kuala Lumpur",
+    "Country": "Malaysia",
+    "Latitude": 2.7456,
+    "Longitude": 101.7099
+  },
+  {
+    "IATA": "MNL",
+    "Name": "Ninoy Aquino International",
+    "City": "Manila",
+    "Country": "Philippines",
+    "Latitude": 14.5086,
+    "Longitude": 121.0194
+  },
+  {
+    "IATA": "CGK",
+    "Name": "Soekarno-Hatta International",
+    "City": "Jakarta",
+    "Country": "Indonesia",
+    "Latitude": -6.1256,
+    "Longitude": 106.6559
+  },
+  {
+    "IATA": "BOM",
+    "Name": "Chhatrapati Shivaji Maharaj International",
+    "City": "Mumbai",
+    "Country": "India",
+    "Latitude": 19.0896,
+    "Longitude": 72.8656
+  },
+  {
+    "IATA": "BLR",
+    "Name": "Kempegowda International",
+    "City": "Bengaluru",
+    "Country": "India",
+    "Latitude": 13.1986,
+    "Longitude": 77.7066
+  },
+  {
+    "IATA": "KIX",
+    "Name": "Kansai International",
+    "City": "Osaka",
+    "Country": "Japan",
+    "Latitude": 34.4347,
+    "Longitude": 135.2442
+  },
+  {
+    "IATA": "JED",
+    "Name": "King Abdulaziz International",
+    "City": "Jeddah",
+    "Country": "Saudi Arabia",
+    "Latitude": 21.6796,
+    "Longitude": 39.1565
+  },
+  {
+    "IATA": "RUH",
+    "Name": "King Khalid International",
+    "City": "Riyadh",
+    "Country": "Saudi Arabia",
+    "Latitude": 24.9576,
+    "Longitude": 46.7029
+  },
+  {
+    "IATA": "SVO",
+    "Name": "Sheremetyevo International",
+    "City": "Moscow",
+    "Country": "Russia",
+    "Latitude": 55.9726,
+    "Longitude": 37.4146
+  },
+  {
+    "IATA": "JNB",
+    "Name": "O. R. Tambo International",
+    "City": "Johannesburg",
+    "Country": "South Africa",
+    "Latitude": -26.1392,
+    "Longitude": 28.246
+  },
+  {
+    "IATA": "CPT",
+    "Name": "Cape Town International",
+    "City": "Cape Town",
+    "Country": "South Africa",
+    "Latitude": -33.9648,
+    "Longitude": 18.6017
+  },
+  {
+    "IATA": "CAI",
+    "Name": "Cairo International",
+    "City": "Cairo",
+    "Country": "Egypt",
+    "Latitude": 30.1126,
+    "Longitude": 31.4056
+  },
+  {
+    "IATA": "NBO",
+    "Name": "Jomo Kenyatta International",
+    "City": "Nairobi",
+    "Country": "Kenya",
+    "Latitude": -1.3192,
+    "Longitude": 36.9278
+  },
+  {
+    "IATA": "ADD",
+    "Name": "Bole International",
+    "City": "Addis Ababa",
+    "Country": "Ethiopia",
+    "Latitude": 8.9779,
+    "Longitude": 38.7993
+  },
+  {
+    "IATA": "MEL",
+    "Name": "Melbourne Airport",
+    "City": "Melbourne",
+    "Country": "Australia",
+    "Latitude": -37.6733,
+    "Longitude": 144.8433
+  },
+  {
+    "IATA": "BNE",
+    "Name": "Brisbane Airport",
+    "City": "Brisbane",
+    "Country": "Australia",
+    "Latitude": -27.3842,
+    "Longitude": 153.1175
+  },
+  {
+    "IATA": "AKL",
+    "Name": "Auckland Airport",
+    "City": "Auckland",
+    "Country": "New Zealand",
+    "Latitude": -37.0082,
+    "Longitude": 174.7917
   }
 ]

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Clock, Search } from "lucide-react";
 import Modal from "./Modal";
+import Pagination from "./Pagination";
 import { isoToLocalInput, localInputToIso } from "../../utils/dateHelpers";
 
 const FlightsManagement = ({
@@ -10,10 +11,25 @@ const FlightsManagement = ({
   airports,
   crew,
   apiService,
+  isActive,
+  isFromNavbar,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(() => {
+    // If coming from navbar, always start at page 1
+    if (isFromNavbar) {
+      console.log("🔵 Flights: Fresh navigation from navbar - starting page 1");
+      return 1;
+    }
+    // Otherwise (F5 refresh), restore from localStorage
+    const saved = localStorage.getItem("flightsManagementPage");
+    const page = saved ? parseInt(saved, 10) : 1;
+    console.log("🔵 Flights: Loading page from localStorage:", page);
+    return page;
+  });
+  const itemsPerPage = 6;
   const [formData, setFormData] = useState({
     flightNumber: "",
     departureTime: "",
@@ -29,6 +45,23 @@ const FlightsManagement = ({
   useEffect(() => {
     if (!isModalOpen) setEditing(null);
   }, [isModalOpen]);
+
+  // Save current page to localStorage
+  useEffect(() => {
+    console.log("🟢 Flights: Saving page to localStorage:", currentPage);
+    localStorage.setItem("flightsManagementPage", currentPage.toString());
+  }, [currentPage]);
+
+  // Reset to page 1 when tab becomes active (but not on first mount)
+  const prevActiveRef = React.useRef(isActive);
+  useEffect(() => {
+    // Only reset if tab was inactive and now became active (tab switch)
+    if (isActive && !prevActiveRef.current) {
+      console.log("🔄 Flights: Tab switched - resetting to page 1");
+      setCurrentPage(1);
+    }
+    prevActiveRef.current = isActive;
+  }, [isActive]);
 
   const openCreate = () => {
     setEditing(null);
@@ -179,6 +212,24 @@ const FlightsManagement = ({
     (f) => f && f.status && f.status.toLowerCase() === "cancelled"
   );
 
+  // Pagination
+  const totalPages = Math.ceil(filteredFlights.length / itemsPerPage);
+  const validCurrentPage = Math.min(currentPage, totalPages || 1);
+  const startIndex = (validCurrentPage - 1) * itemsPerPage;
+  const paginatedFlights = filteredFlights.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    if (searchTerm) {
+      console.log("🔴 Flights: Search changed, resetting to page 1");
+      setCurrentPage(1);
+      localStorage.setItem("flightsManagementPage", "1");
+    }
+  }, [searchTerm]);
+
   const getStatusBadge = (status) => {
     const statusColors = {
       Planned: "bg-blue-100 text-blue-800",
@@ -303,82 +354,16 @@ const FlightsManagement = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y">
-            {/* Planned Flights Section */}
-            {planned.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="6"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
-                  >
-                    Planned ({planned.length})
-                  </td>
-                </tr>
-                {planned.map(renderFlightRow)}
-              </>
-            )}
-
-            {/* Departed Flights Section */}
-            {departed.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="6"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
-                  >
-                    Departed ({departed.length})
-                  </td>
-                </tr>
-                {departed.map(renderFlightRow)}
-              </>
-            )}
-
-            {/* Arrived Flights Section */}
-            {arrived.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="6"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
-                  >
-                    Arrived ({arrived.length})
-                  </td>
-                </tr>
-                {arrived.map(renderFlightRow)}
-              </>
-            )}
-
-            {/* Delayed Flights Section */}
-            {delayed.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="6"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
-                  >
-                    Delayed ({delayed.length})
-                  </td>
-                </tr>
-                {delayed.map(renderFlightRow)}
-              </>
-            )}
-
-            {/* Cancelled Flights Section */}
-            {cancelled.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="6"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
-                  >
-                    Cancelled ({cancelled.length})
-                  </td>
-                </tr>
-                {cancelled.map(renderFlightRow)}
-              </>
-            )}
+            {paginatedFlights.map(renderFlightRow)}
           </tbody>
         </table>
+        <Pagination
+          currentPage={validCurrentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredFlights.length}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       <Modal

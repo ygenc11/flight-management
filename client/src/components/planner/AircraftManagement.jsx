@@ -1,11 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Plane, Search } from "lucide-react";
 import Modal from "./Modal";
+import Pagination from "./Pagination";
 
-const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
+const AircraftManagement = ({
+  aircraft,
+  setAircraft,
+  apiService,
+  isActive,
+  isFromNavbar,
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(() => {
+    // If coming from navbar, always start at page 1
+    if (isFromNavbar) {
+      console.log(
+        "🔵 Aircraft: Fresh navigation from navbar - starting page 1"
+      );
+      return 1;
+    }
+    // Otherwise (F5 refresh), restore from localStorage
+    const saved = localStorage.getItem("aircraftManagementPage");
+    const page = saved ? parseInt(saved, 10) : 1;
+    console.log("🔵 Aircraft: Loading page from localStorage:", page);
+    return page;
+  });
+  const itemsPerPage = 8;
   const [formData, setFormData] = useState({
     model: "",
     tailNumber: "",
@@ -16,6 +38,23 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
   useEffect(() => {
     if (!isModalOpen) setEditing(null);
   }, [isModalOpen]);
+
+  // Save current page to localStorage
+  useEffect(() => {
+    console.log("🟢 Aircraft: Saving page to localStorage:", currentPage);
+    localStorage.setItem("aircraftManagementPage", currentPage.toString());
+  }, [currentPage]);
+
+  // Reset to page 1 when tab becomes active (but not on first mount)
+  const prevActiveRef = React.useRef(isActive);
+  useEffect(() => {
+    // Only reset if tab was inactive and now became active (tab switch)
+    if (isActive && !prevActiveRef.current) {
+      console.log("🔄 Aircraft: Tab switched - resetting to page 1");
+      setCurrentPage(1);
+    }
+    prevActiveRef.current = isActive;
+  }, [isActive]);
 
   const openCreate = () => {
     setEditing(null);
@@ -97,6 +136,24 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
       a.tailNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Pagination
+  const totalPages = Math.ceil(filteredAircraft.length / itemsPerPage);
+  const validCurrentPage = Math.min(currentPage, totalPages || 1);
+  const startIndex = (validCurrentPage - 1) * itemsPerPage;
+  const paginatedAircraft = filteredAircraft.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    if (searchTerm) {
+      console.log("🔴 Aircraft: Search changed, resetting to page 1");
+      setCurrentPage(1);
+      localStorage.setItem("aircraftManagementPage", "1");
+    }
+  }, [searchTerm]);
+
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -149,7 +206,7 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y">
-            {filteredAircraft.map((a) => (
+            {paginatedAircraft.map((a) => (
               <tr key={a.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 flex items-center">
                   <Plane className="w-5 h-5 text-gray-400 mr-3" />
@@ -191,6 +248,13 @@ const AircraftManagement = ({ aircraft, setAircraft, apiService }) => {
             ))}
           </tbody>
         </table>
+        <Pagination
+          currentPage={validCurrentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredAircraft.length}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       <Modal

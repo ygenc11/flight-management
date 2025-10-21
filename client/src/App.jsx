@@ -15,6 +15,7 @@ import {
 } from "react-router-dom";
 import Layout from "./components/Layout";
 import PlannerPage from "./pages/PlannerPage";
+import Map from "./pages/Map";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -30,6 +31,7 @@ function App() {
           <Route path="test-scheduler" element={<TestScheduler />} />
           <Route path="case" element={<CasePage />} />
           <Route path="case-copy" element={<CasePageCopy />} />
+          <Route path="map" element={<Map />} />
         </Route>
       </Routes>
     </Router>

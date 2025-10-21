@@ -1,11 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, User, Search } from "lucide-react";
 import Modal from "./Modal";
+import Pagination from "./Pagination";
 
-const CrewManagement = ({ crew, setCrew, apiService }) => {
+const CrewManagement = ({
+  crew,
+  setCrew,
+  apiService,
+  isActive,
+  isFromNavbar,
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(() => {
+    // If coming from navbar, always start at page 1
+    if (isFromNavbar) {
+      console.log("🔵 Crew: Fresh navigation from navbar - starting page 1");
+      return 1;
+    }
+    // Otherwise (F5 refresh), restore from localStorage
+    const saved = localStorage.getItem("crewManagementPage");
+    const page = saved ? parseInt(saved, 10) : 1;
+    console.log("🔵 Crew: Loading page from localStorage:", page);
+    return page;
+  });
+  const itemsPerPage = 8;
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -16,6 +36,23 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
   useEffect(() => {
     if (!isModalOpen) setEditing(null);
   }, [isModalOpen]);
+
+  // Save current page to localStorage
+  useEffect(() => {
+    console.log("🟢 Crew: Saving page to localStorage:", currentPage);
+    localStorage.setItem("crewManagementPage", currentPage.toString());
+  }, [currentPage]);
+
+  // Reset to page 1 when tab becomes active (but not on first mount)
+  const prevActiveRef = React.useRef(isActive);
+  useEffect(() => {
+    // Only reset if tab was inactive and now became active (tab switch)
+    if (isActive && !prevActiveRef.current) {
+      console.log("🔄 Crew: Tab switched - resetting to page 1");
+      setCurrentPage(1);
+    }
+    prevActiveRef.current = isActive;
+  }, [isActive]);
 
   const openCreate = () => {
     setEditing(null);
@@ -116,6 +153,24 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
     c.role.toLowerCase().includes("attendant")
   );
 
+  // Pagination
+  const totalPages = Math.ceil(filteredCrew.length / itemsPerPage);
+  const validCurrentPage = Math.min(currentPage, totalPages || 1);
+  const startIndex = (validCurrentPage - 1) * itemsPerPage;
+  const paginatedCrew = filteredCrew.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    if (searchTerm) {
+      console.log("🔴 Crew: Search changed, resetting to page 1");
+      setCurrentPage(1);
+      localStorage.setItem("crewManagementPage", "1");
+    }
+  }, [searchTerm]);
+
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -168,181 +223,59 @@ const CrewManagement = ({ crew, setCrew, apiService }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y">
-            {/* Pilots Section */}
-            {pilots.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="5"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
+            {paginatedCrew.map((c) => (
+              <tr key={c.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 flex items-center">
+                  <User className="w-5 h-5 text-gray-400 mr-3" />
+                  {c.firstName} {c.lastName}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
+                      c.role
+                    )}`}
                   >
-                    Pilots ({pilots.length})
-                  </td>
-                </tr>
-                {pilots.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 flex items-center">
-                      <User className="w-5 h-5 text-gray-400 mr-3" />
-                      {c.firstName} {c.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
-                          c.role
-                        )}`}
-                      >
-                        {c.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{c.licenseNumber}</td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => toggleStatus(c.id)}
-                        className={`px-3 py-1 rounded-full text-xs ${
-                          c.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {c.isActive ? "Active" : "Inactive"}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => openEdit(c)}
-                        className="text-blue-600 mr-3"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </>
-            )}
-
-            {/* Co-Pilots Section */}
-            {coPilots.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="5"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
+                    {c.role}
+                  </span>
+                </td>
+                <td className="px-6 py-4">{c.licenseNumber}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => toggleStatus(c.id)}
+                    className={`px-3 py-1 rounded-full text-xs ${
+                      c.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
                   >
-                    Co-Pilots ({coPilots.length})
-                  </td>
-                </tr>
-                {coPilots.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 flex items-center">
-                      <User className="w-5 h-5 text-gray-400 mr-3" />
-                      {c.firstName} {c.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
-                          c.role
-                        )}`}
-                      >
-                        {c.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{c.licenseNumber}</td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => toggleStatus(c.id)}
-                        className={`px-3 py-1 rounded-full text-xs ${
-                          c.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {c.isActive ? "Active" : "Inactive"}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => openEdit(c)}
-                        className="text-blue-600 mr-3"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </>
-            )}
-
-            {/* Flight Attendants Section */}
-            {attendants.length > 0 && (
-              <>
-                <tr className="bg-gray-100">
-                  <td
-                    colSpan="5"
-                    className="px-6 py-2 text-sm font-semibold text-gray-700"
+                    {c.isActive ? "Active" : "Inactive"}
+                  </button>
+                </td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => openEdit(c)}
+                    className="text-blue-600 mr-3"
                   >
-                    Flight Attendants ({attendants.length})
-                  </td>
-                </tr>
-                {attendants.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 flex items-center">
-                      <User className="w-5 h-5 text-gray-400 mr-3" />
-                      {c.firstName} {c.lastName}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${badge(
-                          c.role
-                        )}`}
-                      >
-                        {c.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{c.licenseNumber}</td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => toggleStatus(c.id)}
-                        className={`px-3 py-1 rounded-full text-xs ${
-                          c.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {c.isActive ? "Active" : "Inactive"}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => openEdit(c)}
-                        className="text-blue-600 mr-3"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </>
-            )}
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(c.id)}
+                    className="text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
+        <Pagination
+          currentPage={validCurrentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredCrew.length}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       <Modal

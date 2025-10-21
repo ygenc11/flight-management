@@ -13,6 +13,12 @@ export default function PlannerPage() {
     new Date().toUTCString()
   );
 
+  // Check if this is a fresh navigation (from navbar) or page refresh (F5)
+  const [isFromNavbar] = useState(() => {
+    const wasPageReloaded = sessionStorage.getItem("plannerWasMounted");
+    return wasPageReloaded !== "true";
+  });
+
   // app-level state for all modules
   const [airports, setAirports] = useState([]);
   const [aircraft, setAircraft] = useState([]);
@@ -118,28 +124,34 @@ export default function PlannerPage() {
         </header>
 
         <section className="p-6">
-          {activeTab === "airports" && (
+          <div style={{ display: activeTab === "airports" ? "block" : "none" }}>
             <AirportManagement
               airports={airports}
               setAirports={setAirports}
               apiService={apiService}
+              isActive={activeTab === "airports"}
+              isFromNavbar={isFromNavbar}
             />
-          )}
-          {activeTab === "aircraft" && (
+          </div>
+          <div style={{ display: activeTab === "aircraft" ? "block" : "none" }}>
             <AircraftManagement
               aircraft={aircraft}
               setAircraft={setAircraft}
               apiService={apiService}
+              isActive={activeTab === "aircraft"}
+              isFromNavbar={isFromNavbar}
             />
-          )}
-          {activeTab === "crew" && (
+          </div>
+          <div style={{ display: activeTab === "crew" ? "block" : "none" }}>
             <CrewManagement
               crew={crew}
               setCrew={setCrew}
               apiService={apiService}
+              isActive={activeTab === "crew"}
+              isFromNavbar={isFromNavbar}
             />
-          )}
-          {activeTab === "flights" && (
+          </div>
+          <div style={{ display: activeTab === "flights" ? "block" : "none" }}>
             <FlightsManagement
               flights={flights}
               setFlights={setFlights}
@@ -147,8 +159,10 @@ export default function PlannerPage() {
               airports={airports}
               crew={crew}
               apiService={apiService}
+              isActive={activeTab === "flights"}
+              isFromNavbar={isFromNavbar}
             />
-          )}
+          </div>
         </section>
       </main>
     </div>

@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Search, Globe } from "lucide-react";
 import Modal from "./Modal";
+import Pagination from "./Pagination";
 
-const AirportManagement = ({ airports, setAirports, apiService }) => {
+const AirportManagement = ({
+  airports,
+  setAirports,
+  apiService,
+  isActive,
+  isFromNavbar,
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAirport, setEditingAirport] = useState(null);
   const [formData, setFormData] = useState({
@@ -14,6 +21,19 @@ const AirportManagement = ({ airports, setAirports, apiService }) => {
     country: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(() => {
+    // If coming from navbar, always start at page 1
+    if (isFromNavbar) {
+      console.log("🔵 Airport: Fresh navigation from navbar - starting page 1");
+      return 1;
+    }
+    // Otherwise (F5 refresh), restore from localStorage
+    const saved = localStorage.getItem("airportManagementPage");
+    const page = saved ? parseInt(saved, 10) : 1;
+    console.log("🔵 Airport: Loading page from localStorage:", page);
+    return page;
+  });
+  const itemsPerPage = 8;
 
   useEffect(() => {
     if (!isModalOpen) {
@@ -29,6 +49,23 @@ const AirportManagement = ({ airports, setAirports, apiService }) => {
     }
   }, [isModalOpen]);
 
+  // Save current page to localStorage
+  useEffect(() => {
+    console.log("🟢 Airport: Saving page to localStorage:", currentPage);
+    localStorage.setItem("airportManagementPage", currentPage.toString());
+  }, [currentPage]);
+
+  // Reset to page 1 when tab becomes active (but not on first mount)
+  const prevActiveRef = React.useRef(isActive);
+  useEffect(() => {
+    // Only reset if tab was inactive and now became active (tab switch)
+    if (isActive && !prevActiveRef.current) {
+      console.log("🔄 Airport: Tab switched - resetting to page 1");
+      setCurrentPage(1);
+    }
+    prevActiveRef.current = isActive;
+  }, [isActive]);
+
   const filtered = airports.filter(
     (a) =>
       a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,6 +73,24 @@ const AirportManagement = ({ airports, setAirports, apiService }) => {
       a.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.country.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const validCurrentPage = Math.min(currentPage, totalPages || 1);
+  const startIndex = (validCurrentPage - 1) * itemsPerPage;
+  const paginatedAirports = filtered.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    if (searchTerm) {
+      console.log("🔴 Airport: Search changed, resetting to page 1");
+      setCurrentPage(1);
+      localStorage.setItem("airportManagementPage", "1");
+    }
+  }, [searchTerm]);
 
   const openCreate = () => {
     setEditingAirport(null);
@@ -141,7 +196,7 @@ const AirportManagement = ({ airports, setAirports, apiService }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y">
-            {filtered.map((a) => (
+            {paginatedAirports.map((a) => (
               <tr key={a.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 flex items-center">
                   <Globe className="w-5 h-5 text-gray-400 mr-3" />
@@ -175,6 +230,13 @@ const AirportManagement = ({ airports, setAirports, apiService }) => {
             ))}
           </tbody>
         </table>
+        <Pagination
+          currentPage={validCurrentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filtered.length}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       <Modal

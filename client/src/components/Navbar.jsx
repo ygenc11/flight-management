@@ -135,6 +135,14 @@ const Navbar = () => {
                   Case Scheduler Copy
                 </Link>
               </li>
+              <li>
+                <Link
+                  to={"/map"}
+                  className={isActive("/map") ? activeClass : defaultClass}
+                >
+                  Map
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
