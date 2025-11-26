@@ -281,7 +281,6 @@ const AirportManagement = ({
                 ICAO
               </label>
               <input
-                required
                 maxLength={4}
                 value={formData.icaoCode}
                 onChange={(e) =>
