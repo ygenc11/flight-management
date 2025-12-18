@@ -48,7 +48,7 @@ builder.Services.AddScoped<FlightManagement.Services.IAircraftService, FlightMan
 builder.Services.AddScoped<FlightManagement.Services.ICrewService, FlightManagement.Services.CrewService>();
 builder.Services.AddScoped<FlightManagement.Services.IAirportService, FlightManagement.Services.AirportService>();
 builder.Services.AddScoped<FlightManagement.Services.IFlightService, FlightManagement.Services.FlightService>();
-builder.Services.AddSingleton<FlightManagement.Services.IFlightForecastingService, FlightManagement.Services.FlightForecastingService>();
+builder.Services.AddScoped<FlightManagement.Services.IFlightForecastingService, FlightManagement.Services.FlightForecastingService>();
 
 // Add CORS
 builder.Services.AddCors(options =>

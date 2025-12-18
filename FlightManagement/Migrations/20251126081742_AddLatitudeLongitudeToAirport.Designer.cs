@@ -4,6 +4,7 @@ using FlightManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlightManagement.Migrations
 {
     [DbContext(typeof(FlightManagementContext))]
-    partial class FlightManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20251126081742_AddLatitudeLongitudeToAirport")]
+    partial class AddLatitudeLongitudeToAirport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

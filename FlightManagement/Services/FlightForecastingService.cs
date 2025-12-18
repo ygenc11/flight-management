@@ -1,18 +1,21 @@
 using System.Text.Json;
+using FlightManagement.Repositories;
 
 namespace FlightManagement.Services
 {
     public class FlightForecastingService : IFlightForecastingService
     {
-        private readonly Dictionary<string, (double Lat, double Lon)> _airports;
         private readonly Dictionary<string, int> _aircraftSpeeds;
         private readonly Dictionary<string, (int TaxiOut, int TaxiIn)> _taxiTimes;
         private readonly ILogger<FlightForecastingService> _logger;
+        private readonly IAirportRepository _airportRepository;
 
-        public FlightForecastingService(ILogger<FlightForecastingService> logger)
+        public FlightForecastingService(
+            ILogger<FlightForecastingService> logger,
+            IAirportRepository airportRepository)
         {
             _logger = logger;
-            _airports = LoadAirports();
+            _airportRepository = airportRepository;
             _aircraftSpeeds = LoadAircraftSpeeds();
             _taxiTimes = LoadTaxiTimes();
         }
@@ -25,23 +28,25 @@ namespace FlightManagement.Services
         {
             try
             {
-                // 1. Havalimanı koordinatlarını al
-                if (!_airports.TryGetValue(departureIATA, out var depCoords))
+                // 1. Havalimanı koordinatlarını veritabanından al
+                var depAirport = _airportRepository.GetByIataCodeAsync(departureIATA).Result;
+                if (depAirport == null)
                 {
-                    _logger.LogWarning($"Airport {departureIATA} not found in airports data");
+                    _logger.LogWarning($"Airport {departureIATA} not found in database");
                     return null;
                 }
 
-                if (!_airports.TryGetValue(arrivalIATA, out var arrCoords))
+                var arrAirport = _airportRepository.GetByIataCodeAsync(arrivalIATA).Result;
+                if (arrAirport == null)
                 {
-                    _logger.LogWarning($"Airport {arrivalIATA} not found in airports data");
+                    _logger.LogWarning($"Airport {arrivalIATA} not found in database");
                     return null;
                 }
 
                 // 2. Mesafeyi hesapla (Haversine formülü)
                 double distanceKm = CalculateDistance(
-                    depCoords.Lat, depCoords.Lon,
-                    arrCoords.Lat, arrCoords.Lon);
+                    depAirport.Latitude, depAirport.Longitude,
+                    arrAirport.Latitude, arrAirport.Longitude);
 
                 // 3. Uçak hızını al
                 if (!_aircraftSpeeds.TryGetValue(aircraftModel, out int speedKmh))
@@ -124,26 +129,6 @@ namespace FlightManagement.Services
                 : 7;
         }
 
-        private Dictionary<string, (double Lat, double Lon)> LoadAirports()
-        {
-            try
-            {
-                var jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Airports.json");
-                var jsonString = File.ReadAllText(jsonPath);
-                var airports = JsonSerializer.Deserialize<List<AirportData>>(jsonString);
-
-                return airports?.ToDictionary(
-                    a => a.IATA,
-                    a => (a.Latitude, a.Longitude)
-                ) ?? new Dictionary<string, (double, double)>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading airports data");
-                return new Dictionary<string, (double, double)>();
-            }
-        }
-
         private Dictionary<string, int> LoadAircraftSpeeds()
         {
             try
@@ -185,16 +170,6 @@ namespace FlightManagement.Services
         }
 
         // JSON deserialization models
-        private class AirportData
-        {
-            public string IATA { get; set; } = string.Empty;
-            public string Name { get; set; } = string.Empty;
-            public string City { get; set; } = string.Empty;
-            public string Country { get; set; } = string.Empty;
-            public double Latitude { get; set; }
-            public double Longitude { get; set; }
-        }
-
         private class TaxiTimeData
         {
             public int taxiOut { get; set; }

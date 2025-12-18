@@ -55,14 +55,16 @@ namespace FlightManagement.Services
         /// <summary>
         /// Creates a new airport
         /// </summary>
-        public async Task<Airport> CreateAirportAsync(string name, string city, string country, string iataCode)
+        public async Task<Airport> CreateAirportAsync(string name, string city, string country, string iataCode, double latitude = 0, double longitude = 0)
         {
             var airport = new Airport
             {
                 Name = name,
                 City = city,
                 Country = country,
-                IataCode = iataCode.ToUpperInvariant() // Normalize to uppercase
+                IataCode = iataCode.ToUpperInvariant(), // Normalize to uppercase
+                Latitude = latitude,
+                Longitude = longitude
             };
 
             await _airportRepository.AddAsync(airport);
@@ -76,7 +78,7 @@ namespace FlightManagement.Services
         /// <summary>
         /// Updates an existing airport
         /// </summary>
-        public async Task<bool> UpdateAirportAsync(int id, string name, string city, string country, string iataCode)
+        public async Task<bool> UpdateAirportAsync(int id, string name, string city, string country, string iataCode, double latitude = 0, double longitude = 0)
         {
             var airport = await _airportRepository.GetByIdAsync(id);
             if (airport == null)
@@ -89,6 +91,8 @@ namespace FlightManagement.Services
             airport.City = city;
             airport.Country = country;
             airport.IataCode = iataCode.ToUpperInvariant();
+            airport.Latitude = latitude;
+            airport.Longitude = longitude;
 
             await _airportRepository.UpdateAsync(airport);
 

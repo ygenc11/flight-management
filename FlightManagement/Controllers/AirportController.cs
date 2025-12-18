@@ -36,7 +36,9 @@ namespace FlightManagement.Controllers
                 Country = airport.Country,
                 IataCode = airport.IataCode,
                 IcaoCode = airport.IcaoCode,
-                CountryCode = airport.CountryCode
+                CountryCode = airport.CountryCode,
+                Latitude = airport.Latitude,
+                Longitude = airport.Longitude
             }).ToList();
 
             return Ok(dtoList);
@@ -59,7 +61,9 @@ namespace FlightManagement.Controllers
                 City = airport.City,
                 Country = airport.Country,
                 IataCode = airport.IataCode,
-                IcaoCode = airport.IcaoCode
+                IcaoCode = airport.IcaoCode,
+                Latitude = airport.Latitude,
+                Longitude = airport.Longitude
             };
             _logger.LogInformation("Airport fetched: {Id} {Name}", dto.Id, dto.Name);
             return Ok(dto);
@@ -83,7 +87,9 @@ namespace FlightManagement.Controllers
                 airportDto.Name,
                 airportDto.City,
                 airportDto.Country,
-                airportDto.IataCode
+                airportDto.IataCode,
+                airportDto.Latitude,
+                airportDto.Longitude
             );
 
             // Map to DTO for response
@@ -94,7 +100,9 @@ namespace FlightManagement.Controllers
                 City = airport.City,
                 Country = airport.Country,
                 IataCode = airport.IataCode,
-                IcaoCode = airport.IcaoCode
+                IcaoCode = airport.IcaoCode,
+                Latitude = airport.Latitude,
+                Longitude = airport.Longitude
             };
 
             _logger.LogInformation("Airport created successfully: {Id} - {Name} ({IataCode})", airport.Id, airport.Name, airport.IataCode);
@@ -121,7 +129,9 @@ namespace FlightManagement.Controllers
                 airportDto.Name,
                 airportDto.City,
                 airportDto.Country,
-                airportDto.IataCode
+                airportDto.IataCode,
+                airportDto.Latitude,
+                airportDto.Longitude
             );
 
             if (!success)

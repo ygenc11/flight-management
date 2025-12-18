@@ -19,6 +19,8 @@ const AirportManagement = ({
     countryCode: "",
     city: "",
     country: "",
+    latitude: "",
+    longitude: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(() => {
@@ -45,6 +47,8 @@ const AirportManagement = ({
         countryCode: "",
         city: "",
         country: "",
+        latitude: "",
+        longitude: "",
       });
     }
   }, [isModalOpen]);
@@ -101,6 +105,8 @@ const AirportManagement = ({
       countryCode: "",
       city: "",
       country: "",
+      latitude: "",
+      longitude: "",
     });
     setIsModalOpen(true);
   };
@@ -114,17 +120,24 @@ const AirportManagement = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const dataToSubmit = {
+        ...formData,
+        latitude: formData.latitude === "" ? 0 : parseFloat(formData.latitude),
+        longitude:
+          formData.longitude === "" ? 0 : parseFloat(formData.longitude),
+      };
+
       if (editingAirport) {
-        await apiService.updateAirport(editingAirport.id, formData);
+        await apiService.updateAirport(editingAirport.id, dataToSubmit);
         setAirports((prev) =>
           prev.map((x) =>
             x.id === editingAirport.id
-              ? { ...formData, id: editingAirport.id }
+              ? { ...dataToSubmit, id: editingAirport.id }
               : x
           )
         );
       } else {
-        const newAirport = await apiService.createAirport(formData);
+        const newAirport = await apiService.createAirport(dataToSubmit);
         setAirports((prev) => [...prev, newAirport]);
       }
       setIsModalOpen(false);
@@ -191,6 +204,9 @@ const AirportManagement = ({
                 Country
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Coordinates
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Actions
               </th>
             </tr>
@@ -212,6 +228,16 @@ const AirportManagement = ({
                 </td>
                 <td className="px-6 py-4">{a.city}</td>
                 <td className="px-6 py-4">{a.country}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  <div className="flex flex-col">
+                    <span className="text-xs">
+                      Lat: {a.latitude?.toFixed(4) || "N/A"}
+                    </span>
+                    <span className="text-xs">
+                      Lng: {a.longitude?.toFixed(4) || "N/A"}
+                    </span>
+                  </div>
+                </td>
                 <td className="px-6 py-4">
                   <button
                     onClick={() => openEdit(a)}
@@ -337,6 +363,44 @@ const AirportManagement = ({
               }
               className="w-full px-3 py-2 border rounded-lg"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Latitude <span className="text-red-500">*</span>
+              </label>
+              <input
+                required
+                type="number"
+                step="any"
+                min="-90"
+                max="90"
+                value={formData.latitude}
+                onChange={(e) =>
+                  setFormData({ ...formData, latitude: e.target.value })
+                }
+                placeholder="e.g., 41.2753"
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Longitude <span className="text-red-500">*</span>
+              </label>
+              <input
+                required
+                type="number"
+                step="any"
+                min="-180"
+                max="180"
+                value={formData.longitude}
+                onChange={(e) =>
+                  setFormData({ ...formData, longitude: e.target.value })
+                }
+                placeholder="e.g., 28.7519"
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
           </div>
           <div className="flex justify-end space-x-3 pt-2">
             <button

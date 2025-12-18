@@ -29,12 +29,12 @@ namespace FlightManagement.Services
         /// <summary>
         /// Creates a new airport
         /// </summary>
-        Task<Airport> CreateAirportAsync(string name, string city, string country, string iataCode);
+        Task<Airport> CreateAirportAsync(string name, string city, string country, string iataCode, double latitude = 0, double longitude = 0);
 
         /// <summary>
         /// Updates an existing airport
         /// </summary>
-        Task<bool> UpdateAirportAsync(int id, string name, string city, string country, string iataCode);
+        Task<bool> UpdateAirportAsync(int id, string name, string city, string country, string iataCode, double latitude = 0, double longitude = 0);
 
         /// <summary>
         /// Deletes an airport

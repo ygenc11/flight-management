@@ -64,7 +64,9 @@ namespace FlightManagement.Controllers
                     IataCode = f.DepartureAirport.IataCode,
                     IcaoCode = f.DepartureAirport.IcaoCode,
                     City = f.DepartureAirport.City,
-                    Country = f.DepartureAirport.Country
+                    Country = f.DepartureAirport.Country,
+                    Latitude = f.DepartureAirport.Latitude,
+                    Longitude = f.DepartureAirport.Longitude
                 } : new AirportDTO(),
                 ArrivalAirport = f.ArrivalAirport != null ? new AirportDTO
                 {
@@ -73,7 +75,9 @@ namespace FlightManagement.Controllers
                     IataCode = f.ArrivalAirport.IataCode,
                     IcaoCode = f.ArrivalAirport.IcaoCode,
                     City = f.ArrivalAirport.City,
-                    Country = f.ArrivalAirport.Country
+                    Country = f.ArrivalAirport.Country,
+                    Latitude = f.ArrivalAirport.Latitude,
+                    Longitude = f.ArrivalAirport.Longitude
                 } : new AirportDTO(),
                 CrewMembers = f.CrewMembers.Select(c => new CrewDTO
                 {
@@ -124,7 +128,9 @@ namespace FlightManagement.Controllers
                     IataCode = flight.DepartureAirport.IataCode,
                     IcaoCode = flight.DepartureAirport.IcaoCode,
                     City = flight.DepartureAirport.City,
-                    Country = flight.DepartureAirport.Country
+                    Country = flight.DepartureAirport.Country,
+                    Latitude = flight.DepartureAirport.Latitude,
+                    Longitude = flight.DepartureAirport.Longitude
                 } : new AirportDTO(),
                 ArrivalAirport = flight.ArrivalAirport != null ? new AirportDTO
                 {
@@ -133,7 +139,9 @@ namespace FlightManagement.Controllers
                     IataCode = flight.ArrivalAirport.IataCode,
                     IcaoCode = flight.ArrivalAirport.IcaoCode,
                     City = flight.ArrivalAirport.City,
-                    Country = flight.ArrivalAirport.Country
+                    Country = flight.ArrivalAirport.Country,
+                    Latitude = flight.ArrivalAirport.Latitude,
+                    Longitude = flight.ArrivalAirport.Longitude
                 } : new AirportDTO(),
                 CrewMembers = flight.CrewMembers.Select(c => new CrewDTO
                 {
@@ -243,7 +251,9 @@ namespace FlightManagement.Controllers
                     IataCode = flightWithDetails.DepartureAirport.IataCode,
                     IcaoCode = flightWithDetails.DepartureAirport.IcaoCode,
                     City = flightWithDetails.DepartureAirport.City,
-                    Country = flightWithDetails.DepartureAirport.Country
+                    Country = flightWithDetails.DepartureAirport.Country,
+                    Latitude = flightWithDetails.DepartureAirport.Latitude,
+                    Longitude = flightWithDetails.DepartureAirport.Longitude
                 } : new AirportDTO(),
                 ArrivalAirport = flightWithDetails.ArrivalAirport != null ? new AirportDTO
                 {
@@ -252,7 +262,9 @@ namespace FlightManagement.Controllers
                     IataCode = flightWithDetails.ArrivalAirport.IataCode,
                     IcaoCode = flightWithDetails.ArrivalAirport.IcaoCode,
                     City = flightWithDetails.ArrivalAirport.City,
-                    Country = flightWithDetails.ArrivalAirport.Country
+                    Country = flightWithDetails.ArrivalAirport.Country,
+                    Latitude = flightWithDetails.ArrivalAirport.Latitude,
+                    Longitude = flightWithDetails.ArrivalAirport.Longitude
                 } : new AirportDTO(),
                 CrewMembers = flightWithDetails.CrewMembers.Select(c => new CrewDTO
                 {

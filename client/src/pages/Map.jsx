@@ -10,7 +10,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { TbBuildingAirport } from "react-icons/tb";
 import ReactDOMServer from "react-dom/server";
-import { flights } from "../mock/flightsMockData";
+import apiService from "../services/apiService";
 
 // Fix for default marker icons in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -88,6 +88,58 @@ const FlightMap = () => {
   const [selectedAirport, setSelectedAirport] = React.useState(null);
   const [showFlightsList, setShowFlightsList] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(new Date());
+  const [flights, setFlights] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  // Fetch flights from API
+  React.useEffect(() => {
+    const fetchFlights = async () => {
+      try {
+        setLoading(true);
+        const data = await apiService.getFlights();
+
+        // Transform backend data to map format
+        const transformedFlights = data.map((flight) => ({
+          flightNumber: flight.flightNumber,
+          aircraft: flight.aircraft?.model || "Unknown",
+          status: flight.status || "Planned",
+          departure: {
+            iata: flight.departureAirport?.iataCode || "",
+            name: flight.departureAirport?.name || "",
+            city: flight.departureAirport?.city || "",
+            country: flight.departureAirport?.country || "",
+            lat: flight.departureAirport?.latitude || 0,
+            lng: flight.departureAirport?.longitude || 0,
+            time: new Date(flight.departureTime).toLocaleTimeString("tr-TR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+          arrival: {
+            iata: flight.arrivalAirport?.iataCode || "",
+            name: flight.arrivalAirport?.name || "",
+            city: flight.arrivalAirport?.city || "",
+            country: flight.arrivalAirport?.country || "",
+            lat: flight.arrivalAirport?.latitude || 0,
+            lng: flight.arrivalAirport?.longitude || 0,
+            time: new Date(flight.arrivalTime).toLocaleTimeString("tr-TR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        }));
+
+        setFlights(transformedFlights);
+      } catch (error) {
+        console.error("Error fetching flights:", error);
+        setFlights([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFlights();
+  }, []);
 
   // Update time every second
   React.useEffect(() => {
@@ -153,6 +205,18 @@ const FlightMap = () => {
 
   return (
     <div className="fixed top-[70px] left-0 right-0 bottom-0 w-full overflow-hidden flex flex-col">
+      {/* Loading State */}
+      {loading && (
+        <div className="absolute inset-0 z-[10001] bg-white/80 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-lg font-semibold text-gray-700">
+              Loading flights...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Map Container - Full height */}
       <div className="relative w-full h-full flex-shrink-0">
         {/* Info texts above map - no background, no div, just absolutely positioned text */}
