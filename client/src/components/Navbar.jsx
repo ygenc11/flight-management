@@ -109,34 +109,6 @@ const Navbar = () => {
               </li>
               <li>
                 <Link
-                  to={"/test-scheduler"}
-                  className={
-                    isActive("/test-scheduler") ? activeClass : defaultClass
-                  }
-                >
-                  Test Scheduler
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={"/case"}
-                  className={isActive("/case") ? activeClass : defaultClass}
-                >
-                  Case Scheduler
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={"/case-copy"}
-                  className={
-                    isActive("/case-copy") ? activeClass : defaultClass
-                  }
-                >
-                  Case Scheduler Copy
-                </Link>
-              </li>
-              <li>
-                <Link
                   to={"/map"}
                   className={isActive("/map") ? activeClass : defaultClass}
                 >
