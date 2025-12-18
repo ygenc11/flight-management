@@ -13,8 +13,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Brand Section */}
           <div className="space-y-4">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="flex items-center gap-2 w-fit cursor-pointer"
             >
               <SiPlanetscale className="h-8 w-8 text-blue-600" />

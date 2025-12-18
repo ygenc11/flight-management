@@ -1,6 +1,13 @@
 import ScrollIndicator from "./ScrollIndicator";
 
 export default function Hero() {
+  const scrollToNext = () => {
+    window.scrollBy({
+      top: window.innerHeight,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section
       className="relative bg-gradient-to-br from-sky-900 to-indigo-900 text-white"
@@ -31,7 +38,10 @@ export default function Hero() {
 
         {/* Butonlar */}
         <div className="flex gap-4">
-          <button className="px-6 py-3 bg-sky-500 hover:bg-sky-600 rounded-2xl font-semibold shadow-lg transition-transform transform hover:scale-105">
+          <button
+            onClick={scrollToNext}
+            className="px-6 py-3 bg-sky-500 hover:bg-sky-600 rounded-2xl font-semibold shadow-lg transition-transform transform hover:scale-105"
+          >
             Get Started
           </button>
           <button className="px-6 py-3 bg-white text-sky-700 hover:bg-gray-100 rounded-2xl font-semibold shadow-lg transition-transform transform hover:scale-105">
