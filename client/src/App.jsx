@@ -12,12 +12,16 @@ import {
 import Layout from "./components/Layout";
 import PlannerPage from "./pages/PlannerPage";
 import Map from "./pages/Map";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <Router>
+      {/* Scroll to Top/Bottom Button */}
+      <ScrollToTop />
+
       {/* Routes */}
       <Routes>
         <Route path="/" element={<Layout />}>
