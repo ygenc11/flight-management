@@ -11,7 +11,7 @@ export default function Hero() {
   return (
     <section
       className="relative bg-gradient-to-br from-sky-900 to-indigo-900 text-white"
-      style={{ minHeight: "calc(100vh - 70px)" }} // Navbar yüksekliği çıkarıldı
+      style={{ minHeight: "calc(100vh - 70px)" }}
     >
       {/* Arka plan görseli */}
       <div className="absolute inset-0">
