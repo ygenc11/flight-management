@@ -495,11 +495,14 @@ const FlightMap = () => {
                               {flight.flightNumber}
                             </span>
                           </div>
-                          <span className="text-sm font-semibold text-slate-700">
-                            {flight.type === "departure"
-                              ? flight.departure.time
-                              : flight.arrival.time}
-                          </span>
+                          <div className="text-right">
+                            <div className="text-sm font-semibold text-green-700">
+                              {flight.departure.time}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              Departure
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">
@@ -524,8 +527,13 @@ const FlightMap = () => {
                           </span>
                         </div>
 
-                        <div className="mt-1 text-xs text-slate-500">
-                          {flight.departure.city} → {flight.arrival.city}
+                        <div className="mt-1 text-xs text-slate-500 flex justify-between">
+                          <span>
+                            {flight.departure.city} → {flight.arrival.city}
+                          </span>
+                          <span className="text-red-700 font-semibold">
+                            Arrival: {flight.arrival.time}
+                          </span>
                         </div>
 
                         <div className="mt-2 flex items-center gap-3 text-xs text-slate-400">
