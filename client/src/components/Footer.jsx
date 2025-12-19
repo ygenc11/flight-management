@@ -53,7 +53,7 @@ const Footer = () => {
                   href="/scheduler"
                   className="text-gray-600 hover:text-blue-600 transition-colors text-sm"
                 >
-                  Case Scheduler
+                  Flight Scheduler
                 </a>
               </li>
             </ul>
