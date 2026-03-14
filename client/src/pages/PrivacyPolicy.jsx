@@ -59,7 +59,9 @@ const PrivacyPolicy = () => {
           <Section title="2. How We Use Your Information">
             <p>We use the information we collect to:</p>
             <ul className="list-disc list-inside space-y-1 mt-2 ml-2">
-              <li>Provide, operate, and maintain the FlightManager platform.</li>
+              <li>
+                Provide, operate, and maintain the FlightManager platform.
+              </li>
               <li>
                 Improve, personalize, and expand our features and services.
               </li>
@@ -111,8 +113,8 @@ const PrivacyPolicy = () => {
               We implement industry-standard security measures including
               encryption in transit (TLS/HTTPS), hashed password storage, and
               access controls to protect your data. However, no method of
-              transmission over the internet is 100% secure. We cannot
-              guarantee absolute security but are committed to protecting your
+              transmission over the internet is 100% secure. We cannot guarantee
+              absolute security but are committed to protecting your
               information.
             </p>
           </Section>

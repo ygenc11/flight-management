@@ -74,7 +74,7 @@ const Screenshots = () => {
                     e.target.parentElement.classList.add(
                       "flex",
                       "items-center",
-                      "justify-center"
+                      "justify-center",
                     );
                     e.target.parentElement.innerHTML = `
                       <div class="text-center p-8">
@@ -82,10 +82,10 @@ const Screenshots = () => {
                           index === 0
                             ? "🏠"
                             : index === 1
-                            ? "📊"
-                            : index === 2
-                            ? "🗺️"
-                            : "📅"
+                              ? "📊"
+                              : index === 2
+                                ? "🗺️"
+                                : "📅"
                         }</div>
                         <p class="text-gray-500 text-sm">${screenshot.title}</p>
                       </div>
@@ -116,8 +116,6 @@ const Screenshots = () => {
                     </span>
                   ))}
                 </div>
-
-
               </div>
             </div>
           ))}
