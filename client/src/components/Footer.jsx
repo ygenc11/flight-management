@@ -95,12 +95,12 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
           <p>© {currentYear} FlightManager. All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-blue-600 transition-colors">
+            <Link to="/privacy-policy" className="hover:text-blue-600 transition-colors">
               Privacy Policy
-            </a>
-            <a href="#" className="hover:text-blue-600 transition-colors">
+            </Link>
+            <Link to="/terms-of-service" className="hover:text-blue-600 transition-colors">
               Terms of Service
-            </a>
+            </Link>
           </div>
         </div>
       </div>

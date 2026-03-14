@@ -1,6 +1,4 @@
 import React from "react";
-import { ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
 
 const Screenshots = () => {
   const screenshots = [
@@ -119,14 +117,7 @@ const Screenshots = () => {
                   ))}
                 </div>
 
-                {/* Try it now button */}
-                <Link
-                  to={screenshot.link}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 w-full justify-center"
-                >
-                  Try it now
-                  <ExternalLink className="w-4 h-4" />
-                </Link>
+
               </div>
             </div>
           ))}

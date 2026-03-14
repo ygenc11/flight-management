@@ -13,6 +13,8 @@ import Layout from "./components/Layout";
 import PlannerPage from "./pages/PlannerPage";
 import Map from "./pages/Map";
 import ScrollToTop from "./components/ScrollToTop";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -30,6 +32,8 @@ function App() {
           <Route path="scheduler" element={<CasePage />} />
           <Route path="map" element={<Map />} />
         </Route>
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="terms-of-service" element={<TermsOfService />} />
       </Routes>
     </Router>
   );
