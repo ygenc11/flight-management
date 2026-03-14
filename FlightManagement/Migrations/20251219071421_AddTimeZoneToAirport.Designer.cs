@@ -4,6 +4,7 @@ using FlightManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlightManagement.Migrations
 {
     [DbContext(typeof(FlightManagementContext))]
-    partial class FlightManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20251219071421_AddTimeZoneToAirport")]
+    partial class AddTimeZoneToAirport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,7 +67,7 @@ namespace FlightManagement.Migrations
                     b.HasIndex("TailNumber")
                         .IsUnique();
 
-                    b.ToTable("Aircraft", (string)null);
+                    b.ToTable("Aircraft");
                 });
 
             modelBuilder.Entity("FlightManagement.Entities.Airport", b =>
@@ -114,7 +117,7 @@ namespace FlightManagement.Migrations
                     b.HasIndex("IataCode")
                         .IsUnique();
 
-                    b.ToTable("Airports", (string)null);
+                    b.ToTable("Airports");
                 });
 
             modelBuilder.Entity("FlightManagement.Entities.Crew", b =>
@@ -192,7 +195,7 @@ namespace FlightManagement.Migrations
 
                     b.HasIndex("DepartureAirportId");
 
-                    b.ToTable("Flights", (string)null);
+                    b.ToTable("Flights");
                 });
 
             modelBuilder.Entity("CrewFlight", b =>
